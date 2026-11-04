@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>구독 갱신 장부</title>
+<meta name="description" content="잊고 지나가는 구독료가 없도록 정기 결제와 갱신일을 한눈에 관리하는 구독 갱신 장부.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<header class="hero">
+  <div class="mesh" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+  <div class="wrap hero-inner">
+    <nav class="topbar" aria-label="상단 메뉴">
+      <span class="brand"><span class="logo" aria-hidden="true">₩</span>구독 갱신 장부</span>
+      <button id="themeBtn" class="btn ghost small" type="button" aria-label="테마 전환">테마 전환</button>
+    </nav>
+    <h1>잊고 낸 구독료,<br>이제 <em>0원</em>으로.</h1>
+    <p class="lead">정기 결제를 한 곳에 모으고, 갱신일 전에 미리 알려드려요.</p>
+    <div class="hero-actions">
+      <button id="addBtn" class="btn primary" type="button">구독 추가</button>
+      <button id="demoBtn" class="btn glass" type="button">예시 데이터 불러오기</button>
+    </div>
+    <div class="stats" id="stats" aria-live="polite"></div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <section class="grid2" aria-label="요약">
+    <article class="card" aria-labelledby="catH">
+      <h2 id="catH">카테고리별 월 지출</h2>
+      <div class="donut-wrap">
+        <div id="donut" class="donut" role="img" aria-label="카테고리별 지출 도넛 차트"></div>
+        <ul id="legend" class="legend"></ul>
+      </div>
+    </article>
+    <article class="card" aria-labelledby="upH">
+      <div class="card-head">
+        <h2 id="upH">곧 갱신</h2>
+        <div class="seg" role="group" aria-label="기간 선택">
+          <button type="button" class="seg-btn" data-range="7" aria-pressed="true">7일</button>
+          <button type="button" class="seg-btn" data-range="30" aria-pressed="false">30일</button>
+        </div>
+      </div>
+      <ol id="timeline" class="timeline"></ol>
+      <button id="icsBtn" class="btn ghost small" type="button">캘린더(.ics)로 내보내기</button>
+    </article>
+  </section>
+
+  <section class="card savings" id="savings" aria-live="polite"></section>
+
+  <section aria-labelledby="listH" class="card">
+    <div class="card-head">
+      <h2 id="listH">전체 구독 <span id="demoTag" class="tag demo" hidden>예시 데이터</span></h2>
+      <button id="clearBtn" class="btn danger small" type="button">전체 삭제</button>
+    </div>
+    <ul id="list" class="list"></ul>
+  </section>
+  <p class="foot">데이터는 이 브라우저에만 저장됩니다. USD는 입력한 환율로 원화 환산합니다.</p>
+</main>
+
+<dialog id="formDlg" aria-labelledby="formTitle">
+  <form id="subForm" novalidate method="dialog">
+    <h2 id="formTitle">구독 추가</h2>
+    <div class="field"><label for="fName">서비스 이름</label><input id="fName" name="name" maxlength="40" autocomplete="off" required><p class="err" data-for="name"></p></div>
+    <div class="row2">
+      <div class="field"><label for="fCat">카테고리</label><select id="fCat" name="category"></select><p class="err" data-for="category"></p></div>
+      <div class="field"><label for="fCycle">결제 주기</label><select id="fCycle" name="cycle"></select><p class="err" data-for="cycle"></p></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="fCur">통화</label><select id="fCur" name="currency"><option>KRW</option><option>USD</option></select><p class="err" data-for="currency"></p></div>
+      <div class="field"><label for="fAmt">금액</label><input id="fAmt" name="amount" type="number" inputmode="decimal" step="any" min="0"><p class="err" data-for="amount"></p></div>
+    </div>
+    <div class="field" id="rateField" hidden>
+      <label for="fRate">환율 (1 USD = ? KRW)</label><input id="fRate" name="rate" type="number" inputmode="decimal" step="any" min="0" value="1350">
+      <p class="hint" id="krwPreview" aria-live="polite"></p><p class="err" data-for="rate"></p>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="fDate">다음 갱신일</label><input id="fDate" name="nextDate" type="date"><p class="err" data-for="nextDate"></p></div>
+      <div class="field"><label for="fStatus">상태</label><select id="fStatus" name="status"></select><p class="err" data-for="status"></p></div>
+    </div>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" id="cancelBtn">취소</button>
+      <button type="submit" class="btn primary">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="confirmDlg" aria-labelledby="confirmTitle">
+  <form method="dialog">
+    <h2 id="confirmTitle">정말 삭제할까요?</h2>
+    <p id="confirmMsg"></p>
+    <div class="dlg-actions">
+      <button value="cancel" class="btn ghost">취소</button>
+      <button value="ok" class="btn danger" id="confirmOk">삭제</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
