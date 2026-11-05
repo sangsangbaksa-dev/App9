@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>구독 갱신 장부</title>
 <meta name="description" content="잊고 지나가는 구독료가 없도록 정기 결제와 갱신일을 한눈에 관리하는 구독 갱신 장부.">
+<meta name="theme-color" content="#5b3df0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0b1d" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="구독 갱신 장부">
+<meta property="og:description" content="정기 결제와 갱신일을 한곳에 모으고, 갱신 전에 미리 알려 드려요.">
+<meta property="og:locale" content="ko_KR">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%235b3df0'/%3E%3Cpath d='M9 11h14M9 16h14M9 21h8' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='21' r='3.5' fill='%23ffd36e'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,13 +19,20 @@
 
 <div class="appbar" id="appbar">
   <div class="wrap appbar-inner">
-    <span class="brand"><span class="logo" aria-hidden="true">₩</span><span>구독 갱신 장부</span></span>
+    <a class="brand" href="#top" aria-label="구독 갱신 장부 홈"><svg class="logo-svg" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#5b3df0"/><path d="M9 11h14M9 16h14M9 21h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="21" r="3.5" fill="#ffd36e"/></svg><span>구독 갱신 장부</span></a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+      <a href="#digestCard">브리핑</a>
+      <a href="#budgetCard">예산</a>
+      <a href="#calH">달력</a>
+      <a href="#listH">구독 목록</a>
+      <a href="#bkH">백업</a>
+    </nav>
     <p class="bar-total">이번 달 <strong id="barTotal">0원</strong></p>
     <button id="themeBtn" class="btn ghost small" type="button" aria-label="테마 전환">테마 전환</button>
   </div>
 </div>
 
-<header class="hero">
+<header class="hero" id="top">
   <div class="mesh" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
   <div class="wrap hero-inner">
     <h1>잊고 낸 구독료,<br>이제 <em>0원</em>으로.</h1>
@@ -117,7 +131,7 @@
   </section>
 
   <section class="grid2" aria-label="달력과 해지 시뮬레이터">
-    <article class="card" aria-labelledby="calH">
+    <article class="card" id="calendar" aria-labelledby="calH">
       <div class="card-head">
         <h2 id="calH"><span id="calTitle">이번 달</span> 갱신 달력 <span class="tag est">추정</span></h2>
       </div>
@@ -138,7 +152,7 @@
 
   <section class="card savings" id="savings" aria-live="polite"></section>
 
-  <section aria-labelledby="listH" class="card">
+  <section id="records" aria-labelledby="listH" class="card">
     <div class="card-head">
       <h2 id="listH" tabindex="-1">전체 구독 <span id="demoTag" class="tag demo" hidden>예시 데이터</span></h2>
       <div class="head-actions">
@@ -163,7 +177,7 @@
     <ul id="list" class="list"></ul>
   </section>
 
-  <section class="card" aria-labelledby="bkH">
+  <section id="backup" class="card" aria-labelledby="bkH">
     <div class="card-head">
       <h2 id="bkH">백업과 복원</h2>
     </div>
@@ -175,8 +189,20 @@
     </div>
   </section>
 
-  <p class="foot">데이터는 이 브라우저에만 저장됩니다. USD는 입력한 환율로 원화 환산합니다.</p>
 </main>
+
+<footer class="site-foot">
+  <div class="wrap foot-in">
+    <div class="foot-brand">
+      <span class="brand"><svg class="logo-svg logo-sm" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#5b3df0"/><path d="M9 11h14M9 16h14M9 21h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="21" r="3.5" fill="#ffd36e"/></svg><span>구독 갱신 장부</span></span>
+      <p>정기 구독의 갱신일과 월·연 지출을 한곳에서 관리하는 장부입니다.</p>
+    </div>
+    <div class="foot-meta">
+      <p class="privacy">데이터는 이 브라우저에만 저장되고 서버로 보내지 않아요. USD는 입력한 환율로 원화 환산합니다.</p>
+      <p class="copy">&copy; 2026 구독 갱신 장부. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
 
 <dialog id="formDlg" aria-labelledby="formTitle">
   <form id="subForm" novalidate method="dialog">
