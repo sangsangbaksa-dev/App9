@@ -409,3 +409,13 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* AI renewal briefing */
+.ai-key { margin: var(--s2) 0 var(--s3); padding: var(--s3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); display: grid; gap: var(--s2); }
+.ai-key .field { margin-bottom: 0; }
+.digest-out { margin-top: var(--s3); display: grid; gap: var(--s2); }
+.digest-sum { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.digest-block { display: grid; gap: var(--s1); }
+.digest-h { margin: 0; font-size: .92rem; color: var(--muted); }
+.digest-list { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: .92rem; overflow-wrap: anywhere; }
+.digest-list strong { margin-right: 4px; }

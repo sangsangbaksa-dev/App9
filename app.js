@@ -5,6 +5,8 @@ import {
   sortSubscriptions, monthlySpendTrend, budgetStatus, normalizeSubscription, myMonthlyCost, trialStatus,
   trialAlerts, forecastNextMonths, monthCalendar, toBackup, parseBackup, mergeSubscriptions,
   trialKey, TRIAL_WARN_DAYS, NOTE_MAX,
+  digestFacts, localDigest, buildDigestPrompt, buildAnthropicRequest, extractText, parseDigestResponse,
+  isPlausibleKey, aiErrorMessage, AI_KEY_STORAGE,
 } from './logic.js';
 
 const KEY = 'renewal-ledger:v1', THEME_KEY = 'renewal-ledger:theme', BUDGET_KEY = 'renewal-ledger:budget';
@@ -465,6 +467,7 @@ function render() {
   renderStats();
   renderDonut();
   renderTrials();
+  renderDigest();
   renderTrend();
   renderBudget();
   renderForecast();
@@ -474,6 +477,105 @@ function render() {
   renderSim();
   renderList();
 }
+
+// ---- AI renewal briefing (optional, uses the user's own key) ----
+// aiState.sig is the facts the AI result was made from. When the subscriptions or the date change, the AI result is dropped.
+let aiState = { sig: '', result: null, note: '' };
+let aiBusy = false;
+const readAiKey = () => { try { return (localStorage.getItem(AI_KEY_STORAGE) || '').trim(); } catch { return ''; } };
+const writeAiKey = v => { try { localStorage.setItem(AI_KEY_STORAGE, v); return true; } catch { return false; } };
+const removeAiKey = () => { try { localStorage.removeItem(AI_KEY_STORAGE); return true; } catch { return false; } };
+
+function digestBlock(title, list, empty, key) {
+  const wrap = el('div', { class: 'digest-block' }, el('h3', { class: 'digest-h', text: title }));
+  if (!list.length) { wrap.append(el('p', { class: 'hint', text: empty })); return wrap; }
+  const ul = el('ul', { class: 'digest-list' });
+  for (const x of list) ul.append(el('li', {}, el('strong', { text: x.name }), el('span', { text: ' ' + x[key] })));
+  wrap.append(ul);
+  return wrap;
+}
+// Everything is written with textContent, so model output is never parsed as HTML.
+function paintDigest(result, source, note) {
+  const out = $('digestOut');
+  out.replaceChildren();
+  const mode = $('aiMode');
+  mode.textContent = source === 'ai' ? 'AI 브리핑' : '기본 브리핑';
+  mode.className = source === 'ai' ? 'tag ok' : 'tag est';
+  if (note) out.append(el('p', { class: 'notice', role: 'note', text: note }));
+  out.append(el('p', { class: 'digest-sum', text: result.summary }));
+  out.append(digestBlock('갱신 예정', result.renewals, '앞으로 30일 안에 갱신되는 구독이 없어요.', 'note'));
+  out.append(digestBlock('가격 인상 주의', result.flags, '최근 1년 안에 큰 가격 인상은 없었어요.', 'reason'));
+  out.append(el('p', { class: 'hint', text: source === 'ai'
+    ? 'AI가 만든 브리핑이에요. 금액과 날짜는 장부 기록과 대조해 주세요.'
+    : '키 없이 장부 기록으로 계산한 기본 브리핑이에요.' }));
+}
+function renderDigest() {
+  const facts = digestFacts(subs, todayStr());
+  const fresh = aiState.sig === JSON.stringify(facts);
+  if (fresh && aiState.result) paintDigest(aiState.result, 'ai', '');
+  else paintDigest(localDigest(facts), 'local', fresh ? aiState.note : '');
+}
+async function runDigest() {
+  if (aiBusy) return;
+  const facts = digestFacts(subs, todayStr());
+  const sig = JSON.stringify(facts);
+  const key = readAiKey();
+  if (!key) {
+    aiState = { sig, result: null, note: '저장된 API 키가 없어 기본 브리핑을 보여드려요. “API 키 설정”에서 키를 저장하면 AI 브리핑을 받을 수 있어요.' };
+    renderDigest();
+    return;
+  }
+  aiBusy = true;
+  $('aiRunBtn').disabled = true;
+  $('digestOut').replaceChildren(el('p', { class: 'hint', text: 'AI가 구독 갱신을 정리하고 있어요…' }));
+  let result = null;
+  let failNote = '';
+  try {
+    const { system, user } = buildDigestPrompt(facts);
+    const req = buildAnthropicRequest({ apiKey: key, system, user });
+    const res = await fetch(req.url, req.init);
+    if (!res.ok) {
+      failNote = aiErrorMessage(res.status);
+    } else {
+      const body = await res.json();
+      const usable = body.stop_reason !== 'max_tokens' && body.stop_reason !== 'refusal';
+      result = usable ? parseDigestResponse(extractText(body)) : null;
+      if (!result) failNote = 'AI 응답을 해석하지 못했어요.';
+    }
+  } catch (err) {
+    failNote = err instanceof TypeError ? '네트워크 오류로 AI 브리핑을 만들지 못했어요.' : 'AI 응답을 읽지 못했어요.';
+  } finally {
+    aiBusy = false;
+    $('aiRunBtn').disabled = false;
+  }
+  aiState = { sig, result, note: result ? '' : `${failNote} 기본 브리핑을 보여드려요.` };
+  renderDigest();
+}
+function syncAiKeyUi() {
+  $('aiKeyToggle').textContent = readAiKey() ? 'API 키 관리' : 'API 키 설정';
+}
+$('aiRunBtn').addEventListener('click', runDigest);
+$('aiKeyToggle').addEventListener('click', () => {
+  const box = $('aiKeyBox');
+  const open = box.hidden;
+  box.hidden = !open;
+  $('aiKeyToggle').setAttribute('aria-expanded', String(open));
+  if (open) $('aiKeyInput').focus();
+});
+$('aiKeySave').addEventListener('click', () => {
+  const v = $('aiKeyInput').value.trim();
+  if (!isPlausibleKey(v)) { toast('키 형식이 올바르지 않아요.'); return; }
+  if (!writeAiKey(v)) { toast('이 브라우저에 키를 저장할 수 없어요.'); return; }
+  $('aiKeyInput').value = '';
+  syncAiKeyUi();
+  toast('API 키를 이 브라우저에 저장했어요.');
+});
+$('aiKeyClear').addEventListener('click', () => {
+  removeAiKey();
+  $('aiKeyInput').value = '';
+  syncAiKeyUi();
+  toast('API 키를 삭제했어요.');
+});
 
 // ---- actions ----
 function toggleCancel(id) {
@@ -737,5 +839,6 @@ $('flReset').addEventListener('click', () => {
   renderList();
 });
 $('simReset').addEventListener('click', () => { simOff.clear(); renderSim(); });
+syncAiKeyUi();
 render();
 if (!storageOk) toast('저장소를 사용할 수 없어요. 이 세션에서만 유지됩니다.');

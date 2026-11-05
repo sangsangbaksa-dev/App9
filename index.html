@@ -37,6 +37,26 @@
     <ul id="trialList" class="alert-list"></ul>
   </section>
 
+  <section class="card ai-card" id="digestCard" aria-labelledby="digestH">
+    <div class="card-head">
+      <h2 id="digestH">AI 갱신 브리핑 <span id="aiMode" class="tag est">기본 브리핑</span></h2>
+      <div class="head-actions">
+        <button id="aiRunBtn" class="btn primary small" type="button">브리핑 만들기</button>
+        <button id="aiKeyToggle" class="btn ghost small" type="button" aria-expanded="false" aria-controls="aiKeyBox">API 키 설정</button>
+      </div>
+    </div>
+    <p class="hint">30일 안의 갱신과 최근 1년 안의 큰 가격 인상을 정리해요. 키가 없으면 장부 기록으로 계산한 기본 브리핑을 보여 줘요. AI에는 서비스 이름, 금액, 주기, 갱신일, 가격 변경 기록만 보내고 메모와 인원은 보내지 않아요.</p>
+    <div id="aiKeyBox" class="ai-key" hidden>
+      <div class="field"><label for="aiKeyInput">Anthropic API 키</label><input id="aiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."></div>
+      <p class="hint">키는 이 브라우저의 localStorage에만 저장되고, 브리핑을 만들 때 api.anthropic.com으로만 전송돼요. 공용 컴퓨터에서는 저장하지 마세요.</p>
+      <div class="head-actions">
+        <button id="aiKeySave" class="btn primary small" type="button">키 저장</button>
+        <button id="aiKeyClear" class="btn ghost small" type="button">키 삭제</button>
+      </div>
+    </div>
+    <div id="digestOut" class="digest-out" aria-live="polite"></div>
+  </section>
+
   <section class="grid2" aria-label="요약">
     <article class="card" aria-labelledby="catH">
       <h2 id="catH">카테고리별 월 지출</h2>
