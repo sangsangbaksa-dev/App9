@@ -4,7 +4,7 @@ import {
   addMonths, formatPrice, normalizeName, priceChangeEntry, findDuplicateGroups, filterSubscriptions,
   sortSubscriptions, monthlySpendTrend, budgetStatus, normalizeSubscription, myMonthlyCost, trialStatus,
   trialAlerts, forecastNextMonths, monthCalendar, toBackup, parseBackup, mergeSubscriptions,
-  trialKey, TRIAL_WARN_DAYS,
+  trialKey, TRIAL_WARN_DAYS, NOTE_MAX,
 } from './logic.js';
 
 const KEY = 'renewal-ledger:v1', THEME_KEY = 'renewal-ledger:theme', BUDGET_KEY = 'renewal-ledger:budget';
@@ -183,7 +183,8 @@ function dismissTrial(sub) {
   dismissed = [...dismissed, trialKey(sub)];
   saveDismissed();
   renderTrials();
-  focusHeading('trialH');
+  // A hidden heading cannot take focus, so fall back to the list when the last alert is gone.
+  focusHeading($('trialList').children.length ? 'trialH' : 'listH');
   toast('체험 알림을 껐어요. 종료일을 바꾸면 다시 나타나요.');
 }
 
@@ -479,7 +480,8 @@ function toggleCancel(id) {
   const s = subs.find(x => x.id === id); if (!s) return;
   s.status = s.status === '해지 예정' ? '사용 중' : '해지 예정';
   save(); render();
-  $('list').querySelector(`[data-act="cancel"][data-id="${id}"]`)?.focus({ preventScroll: true });
+  // Imported ids are arbitrary strings, so escape them before building the selector.
+  $('list').querySelector(`[data-act="cancel"][data-id="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
   toast(s.status === '해지 예정' ? `${s.name}: 해지 예정으로 표시` : `${s.name}: 사용 중으로 복원`);
 }
 function confirmDialog(title, msg, okText) {
@@ -513,13 +515,18 @@ function updateSplitUi() {
   const cost = amount > 0 ? monthlyCost({ amount, currency: $('fCur').value, rate, cycle: $('fCycle').value }) : 0;
   $('splitPreview').textContent = cost > 0 && people > 1 ? `내 부담 월 ${won(cost / people)} (${people}명 기준, 추정)` : '';
 }
+function updateNotesCount() {
+  $('notesCount').textContent = `${$('fNotes').value.length}/${NOTE_MAX}`;
+}
 function clearErrors() {
   document.querySelectorAll('#subForm .err').forEach(p => { p.textContent = ''; });
   document.querySelectorAll('#subForm [aria-invalid]').forEach(i => i.removeAttribute('aria-invalid'));
 }
 function openForm(id = null) {
-  editingId = id; clearErrors();
+  clearErrors();
   const s = subs.find(x => x.id === id);
+  // Only keep an edit target that still exists; otherwise saving would silently do nothing.
+  editingId = s ? id : null;
   $('formTitle').textContent = s ? '구독 수정' : '구독 추가';
   $('fName').value = s ? s.name : '';
   $('fCat').value = s ? s.category : CATEGORIES[0];
@@ -532,6 +539,7 @@ function openForm(id = null) {
   $('fTrial').value = s ? (s.trialEnds || '') : '';
   $('fPeople').value = s ? String(s.sharers || 1) : '1';
   $('fNotes').value = s ? (s.notes || '') : '';
+  updateNotesCount();
   updateCurrencyUi();
   $('formDlg').showModal();
   $('fName').focus();
@@ -714,6 +722,7 @@ $('cancelBtn').addEventListener('click', () => $('formDlg').close());
 $('subForm').addEventListener('submit', submitForm);
 for (const id of ['fCur', 'fAmt', 'fRate', 'fPeople']) $(id).addEventListener('input', updateCurrencyUi);
 $('fCycle').addEventListener('change', updateCurrencyUi);
+$('fNotes').addEventListener('input', updateNotesCount);
 document.querySelectorAll('.seg-btn').forEach(b => b.addEventListener('click', () => {
   range = Number(b.dataset.range);
   document.querySelectorAll('.seg-btn').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
