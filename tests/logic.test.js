@@ -3,9 +3,14 @@ import assert from 'node:assert/strict';
 import {
   addMonths, advanceRenewal, monthlyCost, yearlyCost, upcomingWithin, categoryTotals,
   savingsIfCancelled, toIcs, validateSubscription, daysBetween, parseDate, addDays, escapeIcsText,
+  savingsFor, monthlySpendTrend, budgetStatus, validateBudget, normalizeName, findDuplicateGroups,
+  filterSubscriptions, sortSubscriptions, formatPrice, priceChangeEntry, isPriceEntry, toCsv, csvCell,
+  myMonthlyCost, trialStatus, trialAlerts, forecastNextMonths, monthCalendar, toBackup, parseBackup,
+  mergeSubscriptions, normalizeSubscription, NOTE_MAX, trialKey,
 } from '../logic.js';
 
 const mk = (o = {}) => ({ id: 'a1', name: 'Netflix', category: '스트리밍', amount: 10000, currency: 'KRW', rate: 1350, cycle: '매월', nextDate: '2026-12-01', status: '사용 중', ...o });
+const ids = list => list.map(s => s.id);
 
 test('addMonths clamps month-end (Jan 31 + 1 month)', () => {
   assert.equal(addMonths('2026-01-31', 1), '2026-02-28');
@@ -104,6 +109,105 @@ test('savingsIfCancelled counts only 해지 예정', () => {
   assert.deepEqual(savingsIfCancelled([]), { count: 0, monthly: 0, yearly: 0 });
 });
 
+test('savingsFor sums only the chosen ids (Set or array)', () => {
+  const list = [mk({ id: '1', amount: 10000 }), mk({ id: '2', amount: 120000, cycle: '매년' }), mk({ id: '3', amount: 5000 })];
+  assert.deepEqual(savingsFor(list, new Set(['2'])), { count: 1, monthly: 10000, yearly: 120000 });
+  assert.deepEqual(savingsFor(list, ['1', '3']), { count: 2, monthly: 15000, yearly: 180000 });
+  assert.deepEqual(savingsFor(list, new Set()), { count: 0, monthly: 0, yearly: 0 });
+});
+
+test('monthlySpendTrend back-projects cycles over the last 12 months', () => {
+  const t = monthlySpendTrend([
+    mk({ id: '1', amount: 10000 }),
+    mk({ id: '2', cycle: '분기', amount: 30000, nextDate: '2027-01-10' }),
+  ], '2026-11-04', 12);
+  assert.equal(t.length, 12);
+  assert.equal(t[0].ym, '2025-12');
+  assert.equal(t[11].ym, '2026-11');
+  assert.equal(t[11].total, 10000); // quarterly not due in Nov
+  assert.equal(t[10].total, 40000); // Oct: monthly + quarterly
+  assert.equal(t[9].total, 10000);  // Sep: monthly only
+});
+
+test('budgetStatus: disabled without a positive budget, over and under', () => {
+  assert.equal(budgetStatus(100, 0).enabled, false);
+  assert.equal(budgetStatus(100, undefined).enabled, false);
+  const over = budgetStatus(120000, 100000);
+  assert.equal(over.enabled, true);
+  assert.equal(over.over, true);
+  assert.equal(over.percent, 100);
+  assert.equal(over.remaining, -20000);
+  const under = budgetStatus(50000, 100000);
+  assert.equal(under.over, false);
+  assert.equal(under.percent, 50);
+  assert.equal(under.remaining, 50000);
+});
+
+test('validateBudget: empty clears, whole won only', () => {
+  assert.deepEqual(validateBudget(''), { valid: true, value: 0 });
+  assert.deepEqual(validateBudget(null), { valid: true, value: 0 });
+  assert.equal(validateBudget('150000').value, 150000);
+  assert.equal(validateBudget('1.5').valid, false);
+  assert.equal(validateBudget('-1').valid, false);
+  assert.equal(validateBudget('abc').valid, false);
+});
+
+test('normalizeName ignores case, spaces and width', () => {
+  assert.equal(normalizeName(' Netflix '), 'netflix');
+  assert.equal(normalizeName('구글 원 2TB'), '구글원2tb');
+  assert.equal(normalizeName(null), '');
+});
+
+test('findDuplicateGroups returns only names that occur more than once', () => {
+  const groups = findDuplicateGroups([mk({ id: '1', name: 'Netflix' }), mk({ id: '2', name: ' netflix ' }), mk({ id: '3', name: 'Spotify' })]);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].key, 'netflix');
+  assert.deepEqual(groups[0].ids, ['1', '2']);
+  assert.deepEqual(findDuplicateGroups([mk({ id: '1' }), mk({ id: '2', name: 'Other' })]), []);
+});
+
+test('filterSubscriptions by name, category, status and currency', () => {
+  const list = [
+    mk({ id: '1', name: 'Netflix' }),
+    mk({ id: '2', name: '멜론', category: '음악' }),
+    mk({ id: '3', name: 'GPT', category: 'AI', currency: 'USD', amount: 20, status: '해지 예정' }),
+  ];
+  assert.deepEqual(ids(filterSubscriptions(list, { query: 'NET' })), ['1']);
+  assert.deepEqual(ids(filterSubscriptions(list, { query: '멜 론' })), ['2']);
+  assert.deepEqual(ids(filterSubscriptions(list, { category: 'AI', currency: 'USD' })), ['3']);
+  assert.deepEqual(ids(filterSubscriptions(list, { status: '해지 예정' })), ['3']);
+  assert.deepEqual(ids(filterSubscriptions(list, { category: '음악', status: '해지 예정' })), []);
+  assert.equal(filterSubscriptions(list, {}).length, 3);
+});
+
+test('sortSubscriptions by next date, monthly cost and name, without mutating input', () => {
+  const list = [
+    mk({ id: 'a', name: 'B', nextDate: '2026-12-05', amount: 10000 }),
+    mk({ id: 'b', name: 'A', nextDate: '2026-12-01', amount: 30000 }),
+    mk({ id: 'c', name: 'C', nextDate: '2026-12-05', amount: 20000 }),
+  ];
+  assert.deepEqual(ids(sortSubscriptions(list, 'next')), ['b', 'a', 'c']);
+  assert.deepEqual(ids(sortSubscriptions(list, 'monthly')), ['b', 'c', 'a']);
+  assert.deepEqual(ids(sortSubscriptions(list, 'name')), ['b', 'a', 'c']);
+  assert.deepEqual(ids(list), ['a', 'b', 'c']);
+  assert.throws(() => sortSubscriptions(list, 'bogus'));
+});
+
+test('formatPrice and price change history', () => {
+  assert.equal(formatPrice(20, 'USD'), '$20');
+  assert.equal(formatPrice(17000, 'KRW'), '17,000원');
+  assert.deepEqual(
+    priceChangeEntry(mk({ amount: 10, currency: 'USD' }), mk({ amount: 12, currency: 'USD' }), '2026-11-04'),
+    { date: '2026-11-04', from: '$10', to: '$12' });
+  assert.equal(priceChangeEntry(mk({ amount: 10, currency: 'USD' }), mk({ amount: 10, currency: 'USD', rate: 1400 }), '2026-11-04'), null);
+  assert.deepEqual(
+    priceChangeEntry(mk({ amount: 10, currency: 'USD' }), mk({ amount: 13500, currency: 'KRW' }), '2026-11-04'),
+    { date: '2026-11-04', from: '$10', to: '13,500원' });
+  assert.equal(isPriceEntry({ date: '2026-11-04', from: '$10', to: '$12' }), true);
+  assert.equal(isPriceEntry({ date: '2026-02-30', from: '$10', to: '$12' }), false);
+  assert.equal(isPriceEntry({ date: '2026-11-04', from: 1, to: '$12' }), false);
+});
+
 test('toIcs format: CRLF, all-day events, 1-day alarm', () => {
   const ics = toIcs([{ sub: mk(), date: '2026-12-31' }], '20261104T000000Z');
   assert.ok(ics.startsWith('BEGIN:VCALENDAR\r\n'));
@@ -148,6 +252,26 @@ test('toIcs with no items is still a valid calendar', () => {
   assert.ok(ics.includes('BEGIN:VCALENDAR') && !ics.includes('VEVENT'));
 });
 
+test('csvCell escapes quotes and commas and guards formulas', () => {
+  assert.equal(csvCell('a,b'), '"a,b"');
+  assert.equal(csvCell('say "hi"'), '"say ""hi"""');
+  assert.equal(csvCell('=HYPERLINK("x")'), '"\'=HYPERLINK(""x"")"');
+  assert.equal(csvCell(10000), '10000');
+  assert.equal(csvCell(null), '');
+});
+test('toCsv has a Korean header, one row per subscription, CRLF endings', () => {
+  const csv = toCsv([
+    mk({ id: '1', name: 'A,"B"' }),
+    mk({ id: '2', name: '=evil', currency: 'USD', amount: 20, rate: 1350, cycle: '매년', nextDate: '2027-01-01' }),
+  ]);
+  const lines = csv.split('\r\n');
+  assert.equal(lines[0], '서비스명,카테고리,결제주기,통화,금액,환율,월 환산(원),다음 갱신일,상태');
+  assert.equal(lines[1], '"A,""B""",스트리밍,매월,KRW,10000,,10000,2026-12-01,사용 중');
+  assert.equal(lines[2], "'=evil,스트리밍,매년,USD,20,1350,2250,2027-01-01,사용 중");
+  assert.equal(lines.length, 4); // header, two rows, trailing empty after final CRLF
+  assert.ok(csv.endsWith('\r\n'));
+});
+
 test('validateSubscription accepts valid input and normalizes', () => {
   const r = validateSubscription({ name: '  Netflix ', category: '스트리밍', amount: '17000', currency: 'KRW', cycle: '매월', nextDate: '2026-12-01', status: '사용 중' });
   assert.ok(r.valid);
@@ -173,4 +297,149 @@ test('date helpers', () => {
   assert.equal(daysBetween('2026-02-28', '2026-03-01'), 1);
   assert.equal(daysBetween('2028-02-28', '2028-03-01'), 2);
   assert.equal(addDays('2026-12-31', 1), '2027-01-01');
+});
+
+test('validateSubscription defaults optional fields and checks them', () => {
+  const base = { name: 'Netflix', category: '스트리밍', amount: '17000', currency: 'KRW', cycle: '매월', nextDate: '2026-12-01', status: '사용 중' };
+  const ok = validateSubscription(base);
+  assert.ok(ok.valid);
+  assert.equal(ok.value.sharers, 1);
+  assert.equal(ok.value.trialEnds, '');
+  assert.equal(ok.value.notes, '');
+  assert.ok(validateSubscription({ ...base, sharers: '4', trialEnds: '2026-12-01', notes: '가족' }).valid);
+  assert.ok(validateSubscription({ ...base, sharers: '0' }).errors.sharers);
+  assert.ok(validateSubscription({ ...base, sharers: '21' }).errors.sharers);
+  assert.ok(validateSubscription({ ...base, sharers: '2.5' }).errors.sharers);
+  assert.ok(validateSubscription({ ...base, trialEnds: '2026-02-30' }).errors.trialEnds);
+  assert.ok(validateSubscription({ ...base, notes: 'x'.repeat(NOTE_MAX + 1) }).errors.notes);
+});
+
+test('myMonthlyCost divides by sharers, defaulting to 1', () => {
+  assert.equal(myMonthlyCost(mk()), 10000);
+  assert.equal(myMonthlyCost(mk({ sharers: 4 })), 2500);
+  assert.equal(myMonthlyCost(mk({ sharers: 0 })), 10000);
+});
+
+test('trialStatus classifies soon, today, ended and later', () => {
+  const today = '2026-11-04';
+  assert.equal(trialStatus(mk({ trialEnds: '' }), today), null);
+  assert.equal(trialStatus(mk({}), today), null);
+  assert.deepEqual(trialStatus(mk({ trialEnds: '2026-11-06' }), today), { daysLeft: 2, state: 'soon' });
+  assert.deepEqual(trialStatus(mk({ trialEnds: '2026-11-04' }), today), { daysLeft: 0, state: 'today' });
+  assert.deepEqual(trialStatus(mk({ trialEnds: '2026-11-01' }), today), { daysLeft: -3, state: 'ended' });
+  assert.deepEqual(trialStatus(mk({ trialEnds: '2026-12-20' }), today), { daysLeft: 46, state: 'later' });
+});
+
+test('trialAlerts keeps soon/today/recently ended, soonest first', () => {
+  const today = '2026-11-04';
+  const list = trialAlerts([
+    mk({ id: 'late', trialEnds: '2026-12-20' }),
+    mk({ id: 'old', trialEnds: '2026-10-01' }),
+    mk({ id: 'soon', trialEnds: '2026-11-06' }),
+    mk({ id: 'today', trialEnds: '2026-11-04' }),
+  ], today);
+  assert.deepEqual(list.map(x => x.sub.id), ['today', 'soon']);
+});
+
+test('forecastNextMonths projects cycles over 12 columns with totals', () => {
+  const today = '2026-11-04';
+  const f = forecastNextMonths([
+    mk({ id: 'm', amount: 10000, nextDate: '2026-12-01' }),
+    mk({ id: 'q', cycle: '분기', amount: 30000, nextDate: '2027-01-10' }),
+  ], today, 12);
+  assert.equal(f.cols.length, 12);
+  assert.equal(f.cols[0].ym, '2026-11');
+  assert.equal(f.cols[11].ym, '2027-10');
+  const q = f.rows.find(r => r.id === 'q');
+  assert.equal(q.cells[0], 0);       // Nov: not due
+  assert.equal(q.cells[2], 30000);   // Jan 2027
+  assert.equal(q.cells[5], 30000);   // Apr 2027
+  assert.equal(q.total, 120000);
+  assert.equal(f.rows.find(r => r.id === 'm').total, 120000);
+  assert.equal(f.totals[0], 10000);
+  assert.equal(f.total, 240000);
+  assert.deepEqual(f.rows.map(r => r.id), ['m', 'q']); // equal totals and names keep input order
+});
+
+test('monthCalendar places charges on renewal day, clamped to month length', () => {
+  const c = monthCalendar([
+    mk({ id: 'm', nextDate: '2026-12-01' }),
+    mk({ id: 'end', nextDate: '2026-12-31' }),
+    mk({ id: 'y', cycle: '매년', nextDate: '2027-11-15' }),
+    mk({ id: 'q', cycle: '분기', nextDate: '2027-01-10' }),
+  ], '2026-11-04');
+  assert.equal(c.year, 2026);
+  assert.equal(c.month, 11);
+  assert.equal(c.today, 4);
+  assert.equal(c.daysInMonth, 30);
+  assert.equal(c.firstWeekday, new Date(Date.UTC(2026, 10, 1)).getUTCDay());
+  assert.deepEqual(c.days[0].map(x => x.id), ['m']);
+  assert.deepEqual(c.days[14].map(x => x.id), ['y']);
+  assert.deepEqual(c.days[29].map(x => x.id), ['end']); // Dec 31 clamped to Nov 30
+  assert.equal(c.days.reduce((t, d) => t + d.length, 0), 3);
+});
+
+test('toBackup and parseBackup round-trip, with defaults and skip counting', () => {
+  const subs = [mk({ id: 'x', notes: 'hi', sharers: 2, trialEnds: '2026-12-01' })];
+  const text = toBackup(subs, 150000, '2026-11-04T00:00:00.000Z');
+  const r = parseBackup(text);
+  assert.equal(r.valid, true);
+  assert.equal(r.budget, 150000);
+  assert.equal(r.skipped, 0);
+  assert.equal(r.subscriptions.length, 1);
+  assert.equal(r.subscriptions[0].id, 'x');
+  assert.equal(r.subscriptions[0].notes, 'hi');
+  assert.equal(r.subscriptions[0].sharers, 2);
+  assert.equal(r.subscriptions[0].trialEnds, '2026-12-01');
+  assert.deepEqual(r.subscriptions[0].history, []);
+
+  assert.equal(parseBackup('not json').valid, false);
+  assert.equal(parseBackup('{"app":"other","subscriptions":[]}').valid, false);
+  const mixed = JSON.stringify({ app: 'renewal-ledger', version: 2, subscriptions: [{ id: 'a' }, mk({ id: 'b' })] });
+  const m = parseBackup(mixed);
+  assert.equal(m.valid, true);
+  assert.equal(m.skipped, 1);
+  assert.equal(m.subscriptions.length, 1);
+  assert.equal(m.budget, 0);
+});
+
+test('mergeSubscriptions replaces by id and appends the rest', () => {
+  const merged = mergeSubscriptions(
+    [{ id: '1', name: 'A' }, { id: '2', name: 'Old' }],
+    [{ id: '2', name: 'B' }, { id: '3', name: 'C' }]);
+  assert.deepEqual(merged.map(s => s.id), ['1', '2', '3']);
+  assert.equal(merged[1].name, 'B');
+});
+
+test('normalizeSubscription rejects missing ids and keeps valid records', () => {
+  assert.equal(normalizeSubscription(mk({ id: '' })), null);
+  assert.equal(normalizeSubscription(null), null);
+  const n = normalizeSubscription(mk({ id: 'z' }));
+  assert.equal(n.id, 'z');
+  assert.equal(n.demo, false);
+  assert.equal(n.sharers, 1);
+});
+
+test('normalizeSubscription keeps records with malformed optional fields', () => {
+  const n = normalizeSubscription(mk({ id: 's', trialEnds: 'bad-date', sharers: 'x', notes: 'y'.repeat(300) }));
+  assert.ok(n, 'record should not be dropped');
+  assert.equal(n.trialEnds, '');
+  assert.equal(n.sharers, 1);
+  assert.equal(n.notes.length, NOTE_MAX);
+  assert.equal(normalizeSubscription(mk({ id: 't', sharers: null })).sharers, 1);
+});
+
+test('mergeSubscriptions with an empty base removes duplicate ids (last wins)', () => {
+  const m = mergeSubscriptions([], [{ id: '1', name: 'A' }, { id: '1', name: 'B' }]);
+  assert.equal(m.length, 1);
+  assert.equal(m[0].name, 'B');
+});
+
+test('trialAlerts hides dismissed trials until the end date changes', () => {
+  const today = '2026-11-04';
+  const sub = mk({ id: 'n', trialEnds: '2026-11-06' });
+  assert.equal(trialAlerts([sub], today).length, 1);
+  assert.equal(trialAlerts([sub], today, 7, [trialKey(sub)]).length, 0);
+  const moved = mk({ id: 'n', trialEnds: '2026-11-08' });
+  assert.equal(trialAlerts([moved], today, 7, [trialKey(sub)]).length, 1);
 });
