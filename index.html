@@ -5,20 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>구독 갱신 장부</title>
 <meta name="description" content="잊고 지나가는 구독료가 없도록 정기 결제와 갱신일을 한눈에 관리하는 구독 갱신 장부.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<div class="appbar" id="appbar">
+  <div class="wrap appbar-inner">
+    <span class="brand"><span class="logo" aria-hidden="true">₩</span><span>구독 갱신 장부</span></span>
+    <p class="bar-total">이번 달 <strong id="barTotal">0원</strong></p>
+    <button id="themeBtn" class="btn ghost small" type="button" aria-label="테마 전환">테마 전환</button>
+  </div>
+</div>
+
 <header class="hero">
   <div class="mesh" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
   <div class="wrap hero-inner">
-    <nav class="topbar" aria-label="상단 메뉴">
-      <span class="brand"><span class="logo" aria-hidden="true">₩</span>구독 갱신 장부</span>
-      <button id="themeBtn" class="btn ghost small" type="button" aria-label="테마 전환">테마 전환</button>
-    </nav>
     <h1>잊고 낸 구독료,<br>이제 <em>0원</em>으로.</h1>
     <p class="lead">정기 결제를 한 곳에 모으고, 갱신일 전에 미리 알려드려요.</p>
     <div class="hero-actions">
@@ -30,6 +32,11 @@
 </header>
 
 <main id="main" class="wrap">
+  <section id="trialAlerts" class="alerts" aria-labelledby="trialH" hidden>
+    <h2 id="trialH" class="alerts-title" tabindex="-1">무료 체험 알림</h2>
+    <ul id="trialList" class="alert-list"></ul>
+  </section>
+
   <section class="grid2" aria-label="요약">
     <article class="card" aria-labelledby="catH">
       <h2 id="catH">카테고리별 월 지출</h2>
@@ -51,15 +58,103 @@
     </article>
   </section>
 
+  <section class="grid2" aria-label="지출 추이와 예산">
+    <article class="card" aria-labelledby="trendH">
+      <div class="card-head">
+        <h2 id="trendH">월 지출 추이 (최근 12개월) <span class="tag est">추정</span></h2>
+      </div>
+      <p id="trendSummary" class="trend-summary" aria-live="polite"></p>
+      <div id="trend" class="trend"></div>
+      <p class="hint">현재 구독을 기준으로 계산한 추정치예요. 실제 결제 내역과 다를 수 있어요.</p>
+    </article>
+
+    <article class="card" id="budgetCard" aria-labelledby="budH">
+      <div class="card-head">
+        <h2 id="budH">월 예산</h2>
+        <span id="budgetState" class="tag ok" hidden></span>
+      </div>
+      <form id="budgetForm" class="budget-form" novalidate>
+        <label for="budgetInput">이번 달 목표 지출 (원)</label>
+        <div class="budget-row">
+          <input id="budgetInput" name="budget" type="text" inputmode="numeric" autocomplete="off" placeholder="예: 150000">
+          <button type="submit" class="btn primary small">저장</button>
+          <button type="button" id="budgetClear" class="btn ghost small">해제</button>
+        </div>
+        <p class="err" id="budgetErr" role="alert"></p>
+      </form>
+      <div id="budgetMeter" class="meter" role="progressbar" aria-label="월 예산 사용률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><i id="budgetFill"></i></div>
+      <p id="budgetMsg" class="hint" aria-live="polite"></p>
+    </article>
+  </section>
+
+  <section class="card" aria-labelledby="fcH">
+    <div class="card-head">
+      <h2 id="fcH">12개월 지출 예측 <span class="tag est">추정</span></h2>
+      <span id="forecastTotal" class="trend-summary"></span>
+    </div>
+    <p class="hint">현재 구독의 결제 주기로 계산한 추정치예요. 가격 인상, 해지, 환율 변동은 반영하지 않아요. 표의 단위는 원입니다.</p>
+    <div id="forecast" class="table-wrap"></div>
+  </section>
+
+  <section class="grid2" aria-label="달력과 해지 시뮬레이터">
+    <article class="card" aria-labelledby="calH">
+      <div class="card-head">
+        <h2 id="calH"><span id="calTitle">이번 달</span> 갱신 달력 <span class="tag est">추정</span></h2>
+      </div>
+      <div id="calGrid" class="cal-grid" role="group" aria-label="이번 달 갱신 달력"></div>
+      <ul id="calList" class="cal-list"></ul>
+    </article>
+
+    <article class="card" aria-labelledby="simH">
+      <div class="card-head">
+        <h2 id="simH">해지 시뮬레이터</h2>
+        <button id="simReset" class="btn ghost small" type="button">선택 초기화</button>
+      </div>
+      <p class="hint">해지할 구독을 체크하면 절약액을 미리 계산해요. 저장되지 않는 임시 계산입니다.</p>
+      <ul id="simList" class="sim-list"></ul>
+      <div id="simResult" class="sim-result" aria-live="polite"></div>
+    </article>
+  </section>
+
   <section class="card savings" id="savings" aria-live="polite"></section>
 
   <section aria-labelledby="listH" class="card">
     <div class="card-head">
-      <h2 id="listH">전체 구독 <span id="demoTag" class="tag demo" hidden>예시 데이터</span></h2>
-      <button id="clearBtn" class="btn danger small" type="button">전체 삭제</button>
+      <h2 id="listH" tabindex="-1">전체 구독 <span id="demoTag" class="tag demo" hidden>예시 데이터</span></h2>
+      <div class="head-actions">
+        <button id="csvBtn" class="btn ghost small" type="button">CSV 내보내기</button>
+        <button id="clearBtn" class="btn danger small" type="button">전체 삭제</button>
+      </div>
     </div>
+    <div class="toolbar">
+      <div class="field"><label for="flQuery">서비스 검색</label><input id="flQuery" type="search" placeholder="예: 넷플릭스" autocomplete="off"></div>
+      <div class="filters">
+        <div class="field"><label for="flCat">카테고리</label><select id="flCat"><option value="">전체</option></select></div>
+        <div class="field"><label for="flStatus">상태</label><select id="flStatus"><option value="">전체</option></select></div>
+        <div class="field"><label for="flCur">통화</label><select id="flCur"><option value="">전체</option></select></div>
+        <div class="field"><label for="flSort">정렬</label><select id="flSort"><option value="next">다음 갱신일 순</option><option value="monthly">월 비용 높은 순</option><option value="name">이름 순</option></select></div>
+      </div>
+      <div class="toolbar-foot">
+        <p id="resultInfo" class="hint" aria-live="polite"></p>
+        <button id="flReset" type="button" class="btn ghost small">필터 초기화</button>
+      </div>
+    </div>
+    <div id="dupWarn" class="notice" role="note" hidden></div>
     <ul id="list" class="list"></ul>
   </section>
+
+  <section class="card" aria-labelledby="bkH">
+    <div class="card-head">
+      <h2 id="bkH">백업과 복원</h2>
+    </div>
+    <p class="hint">구독 목록과 예산을 JSON 파일로 저장하거나 복원해요. 가져오기는 같은 ID의 구독을 파일 내용으로 바꾸고, 나머지는 추가합니다.</p>
+    <div class="head-actions backup-actions">
+      <button id="jsonExportBtn" class="btn primary small" type="button">JSON 백업 내보내기</button>
+      <button id="jsonImportBtn" class="btn ghost small" type="button">JSON 가져오기</button>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+    </div>
+  </section>
+
   <p class="foot">데이터는 이 브라우저에만 저장됩니다. USD는 입력한 환율로 원화 환산합니다.</p>
 </main>
 
@@ -82,6 +177,13 @@
     <div class="row2">
       <div class="field"><label for="fDate">다음 갱신일</label><input id="fDate" name="nextDate" type="date"><p class="err" data-for="nextDate"></p></div>
       <div class="field"><label for="fStatus">상태</label><select id="fStatus" name="status"></select><p class="err" data-for="status"></p></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="fTrial">체험 종료일 (선택)</label><input id="fTrial" name="trialEnds" type="date"><p class="err" data-for="trialEnds"></p></div>
+      <div class="field"><label for="fPeople">함께 쓰는 인원</label><input id="fPeople" name="sharers" type="number" inputmode="numeric" step="1" min="1" max="20" value="1"><p class="hint" id="splitPreview" aria-live="polite"></p><p class="err" data-for="sharers"></p></div>
+    </div>
+    <div class="field">
+      <label for="fNotes">메모 (선택, 200자 이내)</label><textarea id="fNotes" name="notes" rows="2" maxlength="200"></textarea><p class="hint" id="notesCount"></p><p class="err" data-for="notes"></p>
     </div>
     <div class="dlg-actions">
       <button type="button" class="btn ghost" id="cancelBtn">취소</button>
