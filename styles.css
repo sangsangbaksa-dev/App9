@@ -119,7 +119,7 @@ h1 em { font-style: normal; background: linear-gradient(90deg, #fff, #ffe29a); -
   color: var(--text); background: transparent; -webkit-tap-highlight-color: transparent;
   transition: transform .2s var(--ease), box-shadow .2s var(--ease), background-color .2s, border-color .2s, color .2s;
 }
-.btn.small { padding: 7px 14px; min-height: 36px; font-size: .86rem; }
+.btn.small { padding: 9px 16px; min-height: 44px; font-size: .88rem; }
 .btn:active:not(:disabled) { transform: scale(.97); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn.primary { color: var(--accent-text); background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px rgba(91,61,240,.28); }
@@ -151,7 +151,7 @@ main { margin-top: -48px; position: relative; padding-bottom: var(--s6); display
 .seg { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 3px; }
 .seg-btn {
   font: inherit; font-size: .85rem; font-weight: 700; border: 0; background: transparent; color: var(--muted);
-  padding: 6px 14px; border-radius: 999px; cursor: pointer; min-height: 34px; transition: background-color .2s, color .2s;
+  padding: 8px 14px; border-radius: 999px; cursor: pointer; min-height: 44px; transition: background-color .2s, color .2s;
 }
 .seg-btn:hover { color: var(--text); }
 .seg-btn[aria-pressed="true"] { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); }
@@ -216,6 +216,7 @@ main { margin-top: -48px; position: relative; padding-bottom: var(--s6); display
 .legend .bar i { display: block; height: 100%; width: 0; border-radius: 99px; transition: width 1s var(--ease); }
 .legend .amt { color: var(--muted); font-variant-numeric: tabular-nums; }
 .legend .empty { grid-column: 1 / -1; }
+.legend:has(.empty) { flex-basis: 100%; }
 
 /* ---------- timeline ---------- */
 .timeline { list-style: none; margin: var(--s2) 0 var(--s3); padding: 0 0 0 22px; position: relative; display: grid; gap: var(--s3); }
