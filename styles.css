@@ -450,3 +450,40 @@ a.brand:hover { opacity: .9; }
   .site-nav::-webkit-scrollbar { display: none; }
   .site-nav a { flex: 0 0 auto; }
 }
+
+/* ---------- direction pass: deep green primary, navy ink, serif display, large radius ---------- */
+:root {
+  --bg: #F8FAFC; --surface: #ffffff; --surface-2: #F1F5F9; --border: #DCE4EE; --border-strong: #B9C6D6;
+  --text: #0A1628; --muted: #4B5A6E;
+  --accent: #0B6E4F; --accent-2: #0E8A63; --accent-soft: rgba(11,110,79,.10); --focus: #0B6E4F;
+  --hero1: #0A1628; --hero2: #0B6E4F; --hero3: #0C3E5A;
+  --c0: #0B6E4F; --c1: #1D6F8C; --c2: #0A1628; --c3: #C98A12; --c4: #5B8A3C; --c5: #3E5C86; --c6: #8A96A8;
+  --radius-lg: 22px; --radius-md: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A1628; --surface: #11203A; --surface-2: #162948; --border: #22344F; --border-strong: #2F4566;
+    --text: #E8EEF5; --muted: #9AA9BD;
+    --accent: #4FCB9B; --accent-2: #7FE0BA; --accent-soft: rgba(79,203,155,.16); --accent-text: #06241A; --on-accent: #06241A; --on-badge: #06241A; --focus: #7FE0BA;
+    --bar-bg: rgba(10,22,40,.88);
+    --hero1: #06101F; --hero2: #0B5240; --hero3: #0C3E5A;
+    --c0: #4FCB9B; --c1: #5FB7D6; --c2: #E8EEF5; --c3: #F2C14E; --c4: #9BD27A; --c5: #8AA6D6; --c6: #7D8CA3;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A1628; --surface: #11203A; --surface-2: #162948; --border: #22344F; --border-strong: #2F4566;
+  --text: #E8EEF5; --muted: #9AA9BD;
+  --accent: #4FCB9B; --accent-2: #7FE0BA; --accent-soft: rgba(79,203,155,.16); --accent-text: #06241A; --on-accent: #06241A; --on-badge: #06241A; --focus: #7FE0BA;
+  --bar-bg: rgba(10,22,40,.88);
+  --hero1: #06101F; --hero2: #0B5240; --hero3: #0C3E5A;
+  --c0: #4FCB9B; --c1: #5FB7D6; --c2: #E8EEF5; --c3: #F2C14E; --c4: #9BD27A; --c5: #8AA6D6; --c6: #7D8CA3;
+}
+h1,h2{font-family:Georgia,"Times New Roman","Noto Serif KR",serif;font-weight:700;letter-spacing:-.01em}
+.btn{border-radius:999px}
+.btn.primary{background:var(--accent);color:var(--on-accent);box-shadow:0 6px 16px rgba(11,110,79,.22)}
+.btn.primary:hover{background:#064D36;box-shadow:0 10px 24px rgba(11,110,79,.3)}
+:root:not([data-theme="light"]) .btn.primary:hover,:root[data-theme="dark"] .btn.primary:hover{background:#7FE0BA}
+.appbar-cta{margin-left:auto;min-height:40px}
+.appbar-inner .bar-total{margin-left:0}
+@media (max-width: 480px){ .appbar-cta{order:2} }
+.card,.stat,.item{border-radius:var(--radius-lg)}

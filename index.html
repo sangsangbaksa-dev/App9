@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>구독 갱신 장부</title>
 <meta name="description" content="잊고 지나가는 구독료가 없도록 정기 결제와 갱신일을 한눈에 관리하는 구독 갱신 장부.">
-<meta name="theme-color" content="#5b3df0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d0b1d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0B6E4F" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A1628" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:title" content="구독 갱신 장부">
 <meta property="og:description" content="정기 결제와 갱신일을 한곳에 모으고, 갱신 전에 미리 알려 드려요.">
 <meta property="og:locale" content="ko_KR">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%235b3df0'/%3E%3Cpath d='M9 11h14M9 16h14M9 21h8' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='21' r='3.5' fill='%23ffd36e'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230B6E4F'/%3E%3Cpath d='M9 11h14M9 16h14M9 21h8' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='21' r='3.5' fill='%23ffd36e'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
 
 <div class="appbar" id="appbar">
   <div class="wrap appbar-inner">
-    <a class="brand" href="#top" aria-label="구독 갱신 장부 홈"><svg class="logo-svg" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#5b3df0"/><path d="M9 11h14M9 16h14M9 21h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="21" r="3.5" fill="#ffd36e"/></svg><span>구독 갱신 장부</span></a>
+    <a class="brand" href="#top" aria-label="구독 갱신 장부 홈"><svg class="logo-svg" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#0B6E4F"/><path d="M9 11h14M9 16h14M9 21h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="21" r="3.5" fill="#ffd36e"/></svg><span>구독 갱신 장부</span></a>
     <nav class="site-nav" aria-label="주요 메뉴">
       <a href="#digestCard">브리핑</a>
       <a href="#budgetCard">예산</a>
@@ -28,6 +28,7 @@
       <a href="#bkH">백업</a>
     </nav>
     <p class="bar-total">이번 달 <strong id="barTotal">0원</strong></p>
+    <button class="btn primary small appbar-cta" type="button" onclick="document.getElementById('addBtn').click()">구독 추가</button>
     <button id="themeBtn" class="btn ghost small" type="button" aria-label="테마 전환">테마 전환</button>
   </div>
 </div>
@@ -194,7 +195,7 @@
 <footer class="site-foot">
   <div class="wrap foot-in">
     <div class="foot-brand">
-      <span class="brand"><svg class="logo-svg logo-sm" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#5b3df0"/><path d="M9 11h14M9 16h14M9 21h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="21" r="3.5" fill="#ffd36e"/></svg><span>구독 갱신 장부</span></span>
+      <span class="brand"><svg class="logo-svg logo-sm" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#0B6E4F"/><path d="M9 11h14M9 16h14M9 21h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="21" r="3.5" fill="#ffd36e"/></svg><span>구독 갱신 장부</span></span>
       <p>정기 구독의 갱신일과 월·연 지출을 한곳에서 관리하는 장부입니다.</p>
     </div>
     <div class="foot-meta">
