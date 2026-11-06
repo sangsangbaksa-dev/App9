@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  addMonths, advanceRenewal, monthlyCost, yearlyCost, upcomingWithin, categoryTotals,
+  addMonths, advanceRenewal, rollSubscription, monthlyCost, yearlyCost, upcomingWithin, categoryTotals,
   savingsIfCancelled, toIcs, validateSubscription, daysBetween, parseDate, addDays, escapeIcsText,
   savingsFor, monthlySpendTrend, budgetStatus, validateBudget, normalizeName, findDuplicateGroups,
   filterSubscriptions, sortSubscriptions, formatPrice, priceChangeEntry, isPriceEntry, toCsv, csvCell,
@@ -442,4 +442,40 @@ test('trialAlerts hides dismissed trials until the end date changes', () => {
   assert.equal(trialAlerts([sub], today, 7, [trialKey(sub)]).length, 0);
   const moved = mk({ id: 'n', trialEnds: '2026-11-08' });
   assert.equal(trialAlerts([moved], today, 7, [trialKey(sub)]).length, 1);
+});
+
+// This exercises separate loads, rather than advancing directly from January to March.
+test('saved monthly renewal keeps its billing day after February and unrelated edits', () => {
+  const january = mk({ nextDate: '2026-01-31' });
+  const february = rollSubscription(january, '2026-02-01');
+  assert.equal(february.nextDate, '2026-02-28');
+  const reloaded = normalizeSubscription(JSON.parse(JSON.stringify({ ...february, notes: 'changed' })));
+  const march = rollSubscription(reloaded, '2026-03-01');
+  assert.equal(march.nextDate, '2026-03-31');
+  assert.equal(march.renewalAnchor, '2026-01-31');
+  assert.equal(upcomingWithin([march], '2026-04-01', 30)[0].date, '2026-04-30');
+  const cal = monthCalendar([march], '2026-05-01');
+  assert.equal(cal.days[30][0].id, january.id);
+});
+test('saved annual renewal returns to leap day when the next leap year arrives', () => {
+  let s = mk({ nextDate: '2024-02-29', cycle: '매년' });
+  for (let year = 2025; year <= 2028; year++) s = rollSubscription(normalizeSubscription(s), year + '-02-01');
+  assert.equal(s.nextDate, '2028-02-29');
+  assert.equal(s.renewalAnchor, '2024-02-29');
+});
+test('bad saved renewal anchors fall back to the current date', () => {
+  for (const anchor of ['bad', '2026-02-30', '2099-01-01']) {
+    const s = normalizeSubscription(mk({ renewalAnchor: anchor }));
+    assert.equal(s.renewalAnchor, s.nextDate);
+  }
+});
+
+test('backup preserves an explicitly cleared budget and distinguishes legacy missing budgets', () => {
+  const cleared = parseBackup(toBackup([], 0));
+  assert.equal(cleared.hasBudget, true);
+  assert.equal(cleared.budget, 0);
+  const legacy = parseBackup(JSON.stringify({ app: 'renewal-ledger', subscriptions: [] }));
+  assert.equal(legacy.hasBudget, false);
+  const broken = parseBackup(JSON.stringify({ app: 'renewal-ledger', subscriptions: [], budget: 'wrong' }));
+  assert.equal(broken.hasBudget, false);
 });

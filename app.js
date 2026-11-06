@@ -1,5 +1,5 @@
 import {
-  CATEGORIES, CURRENCIES, CYCLES, STATUSES, DEFAULT_RATE, monthlyCost, yearlyCost, advanceRenewal, upcomingWithin,
+  CATEGORIES, CURRENCIES, CYCLES, STATUSES, DEFAULT_RATE, monthlyCost, yearlyCost, advanceRenewal, upcomingWithin, rollSubscription,
   categoryTotals, savingsIfCancelled, savingsFor, toIcs, toCsv, validateSubscription, validateBudget,
   addMonths, formatPrice, normalizeName, priceChangeEntry, findDuplicateGroups, filterSubscriptions,
   sortSubscriptions, monthlySpendTrend, budgetStatus, normalizeSubscription, myMonthlyCost, trialStatus,
@@ -96,8 +96,10 @@ function advanceAll() {
   const today = todayStr();
   let changed = false;
   for (const s of subs) {
-    const n = advanceRenewal(s.nextDate, s.cycle, today);
-    if (n !== s.nextDate) { s.nextDate = n; changed = true; }
+    const next = rollSubscription(s, today);
+    if (next.nextDate !== s.nextDate || next.renewalAnchor !== s.renewalAnchor) {
+      s.nextDate = next.nextDate; s.renewalAnchor = next.renewalAnchor; changed = true;
+    }
   }
   if (changed) save();
 }
@@ -565,7 +567,8 @@ function submitForm(e) {
     const prev = subs[i];
     const entry = priceChangeEntry(prev, r.value, today);
     const history = prev.history || [];
-    subs[i] = { ...prev, ...r.value, history: entry ? [...history, entry] : history };
+    const anchor = r.value.nextDate === prev.nextDate && r.value.cycle === prev.cycle ? prev.renewalAnchor : r.value.nextDate;
+    subs[i] = { ...prev, ...r.value, renewalAnchor: anchor, history: entry ? [...history, entry] : history };
     msg = entry ? '수정했어요. 가격 변경을 기록했어요.' : '수정했어요.';
   } else {
     const sameName = subs.some(x => normalizeName(x.name) === normalizeName(r.value.name));
@@ -627,16 +630,16 @@ async function importJson(e) {
   catch { parsed = { valid: false, error: '파일을 읽지 못했어요.' }; }
   if (!parsed.valid) return toast(parsed.error);
   const n = parsed.subscriptions.length;
-  if (!n) return toast('가져올 구독이 없어요.');
+  if (!n && !parsed.hasBudget) return toast('가져올 구독이 없어요.');
   const skipNote = parsed.skipped ? ` 형식이 맞지 않는 ${parsed.skipped}건은 건너뜁니다.` : '';
-  const budgetNote = parsed.budget > 0 ? ' 예산도 파일 값으로 바꿉니다.' : '';
+  const budgetNote = parsed.hasBudget ? (parsed.budget > 0 ? ' 예산도 파일 값으로 바꿉니다.' : ' 월 예산을 해제합니다.') : '';
   const ok = await confirmDialog('백업 가져오기', `${n}건을 가져와요. 같은 ID의 구독은 파일 내용으로 바뀝니다.${skipNote}${budgetNote}`, '가져오기');
   if (!ok) return;
   subs = mergeSubscriptions(subs, parsed.subscriptions);
-  if (parsed.budget > 0) {
+  if (parsed.hasBudget) {
     budget = parsed.budget;
     saveBudget();
-    $('budgetInput').value = String(budget);
+    $('budgetInput').value = budget > 0 ? String(budget) : '';
   }
   save(); render(); toast(`${n}건을 가져왔어요.`);
 }
