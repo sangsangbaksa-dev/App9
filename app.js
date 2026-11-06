@@ -1,3 +1,4 @@
+import { backupIndicator } from './backup-status.js';
 import {
   CATEGORIES, CURRENCIES, CYCLES, STATUSES, DEFAULT_RATE, monthlyCost, yearlyCost, advanceRenewal, upcomingWithin, rollSubscription,
   categoryTotals, savingsIfCancelled, savingsFor, toIcs, toCsv, validateSubscription, validateBudget,
@@ -7,6 +8,7 @@ import {
   trialKey, TRIAL_WARN_DAYS, NOTE_MAX,
 } from './logic.js';
 
+const backupState = backupIndicator(document.getElementById('backupStatus'), 'renewal-ledger:backup-requested');
 const KEY = 'renewal-ledger:v1', THEME_KEY = 'renewal-ledger:theme', BUDGET_KEY = 'renewal-ledger:budget';
 const DISMISS_KEY = 'renewal-ledger:trial-dismissed';
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
@@ -19,6 +21,7 @@ let subs = [];
 let range = 7;
 let editingId = null;
 let storageOk = true;
+let recoveryRaw = null;
 let budget = 0;
 let dismissed = [];
 const simOff = new Set();
@@ -49,14 +52,18 @@ function svgEl(tag, attrs = {}) {
 // Stored shape: [{ id, name, category, amount, currency, rate, cycle, nextDate, status, demo?, history?,
 //                  trialEnds?, sharers?, notes? }]. Missing optional fields get defaults on load.
 function load() {
+  let raw;
+  try { raw = localStorage.getItem(KEY); } catch { storageOk = false; return []; }
+  if (!raw) return [];
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
     const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return [];
-    // mergeSubscriptions also removes duplicate ids that could make edits hit the wrong record.
-    return mergeSubscriptions([], arr.map(normalizeSubscription).filter(Boolean));
-  } catch { storageOk = false; return []; }
+    if (!Array.isArray(arr)) throw new Error('invalid data');
+    const clean = arr.map(normalizeSubscription).filter(Boolean);
+    const merged = mergeSubscriptions([], clean);
+    // Keep the original if a row is unreadable or deduplication would discard one.
+    if (clean.length !== arr.length || merged.length !== clean.length) recoveryRaw = raw;
+    return merged;
+  } catch { recoveryRaw = raw; return []; }
 }
 function loadDismissed() {
   try {
@@ -73,7 +80,8 @@ function focusHeading(id) {
   if (h) h.focus({ preventScroll: true });
 }
 function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(subs)); }
+  if (recoveryRaw !== null) { $('recovery').hidden = false; return false; }
+  try { localStorage.setItem(KEY, JSON.stringify(subs)); return true; }
   catch { if (storageOk) { storageOk = false; toast('저장소를 사용할 수 없어 새로고침하면 데이터가 사라집니다.'); } }
 }
 function loadBudget() {
@@ -617,6 +625,7 @@ function exportCsv() {
 function exportJson() {
   download(`renewal-ledger-backup-${todayStr()}.json`,
     new Blob([toBackup(subs, budget, new Date().toISOString())], { type: 'application/json;charset=utf-8' }));
+  if (recoveryRaw === null) backupState.mark();
   toast(`${subs.length}건을 백업했어요.`);
 }
 async function importJson(e) {
@@ -698,6 +707,17 @@ fillSelect($('flCat'), CATEGORIES); fillSelect($('flStatus'), STATUSES); fillSel
 initTheme();
 initAppbar();
 subs = load();
+$('recovery').hidden = recoveryRaw === null;
+$('recoveryDownload').addEventListener('click', () => {
+  if (recoveryRaw !== null) download('renewal-ledger-original.json', new Blob([recoveryRaw], {type:'application/json;charset=utf-8'}));
+});
+$('recoveryReset').addEventListener('click', async () => {
+  const ok = await confirmDialog('새 기록으로 시작', '읽지 못한 원본을 현재 화면의 기록으로 덮어씁니다. 원본을 먼저 내려받았는지 확인하세요.', '시작');
+  if (!ok) return;
+  const old = recoveryRaw; recoveryRaw = null;
+  if (!save()) { recoveryRaw = old; return; }
+  $('recovery').hidden = true; toast('현재 기록을 저장했어요.');
+});
 budget = loadBudget();
 dismissed = loadDismissed();
 $('budgetInput').value = budget > 0 ? String(budget) : '';

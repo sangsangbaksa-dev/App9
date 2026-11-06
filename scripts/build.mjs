@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../', import.meta.url), out = new URL('dist/', root);
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
-for (const file of ['index.html', 'app.js', 'logic.js', 'styles.css', '_headers', '404.html', 'icon.svg']) {
+for (const file of ['index.html', 'app.js', 'logic.js', 'backup-status.js', 'styles.css', '_headers', '404.html', 'icon.svg', 'privacy.html']) {
   cpSync(new URL(file, root), new URL(file, out));
 }
 console.log('Static build ready:', fileURLToPath(out));
