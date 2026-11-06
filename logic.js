@@ -63,6 +63,15 @@ export function advanceRenewal(dateStr, cycle, today) {
   return next;
 }
 
+/** Keep the original billing day across saves (Jan 31 -> Feb 28 -> Mar 31). */
+export function renewalAnchor(sub) {
+  return parseDate(sub.renewalAnchor) && sub.renewalAnchor <= sub.nextDate ? sub.renewalAnchor : sub.nextDate;
+}
+export function rollSubscription(sub, today) {
+  const anchor = renewalAnchor(sub);
+  return { ...sub, renewalAnchor: anchor, nextDate: advanceRenewal(anchor, sub.cycle, today) };
+}
+
 const rateOf = sub => (sub.currency === 'USD' ? (Number(sub.rate) > 0 ? Number(sub.rate) : DEFAULT_RATE) : 1);
 
 /** Cost in KRW per month. */
@@ -81,7 +90,7 @@ export function myMonthlyCost(sub) {
 export function upcomingWithin(subs, today, days) {
   return subs
     .map(sub => {
-      const date = advanceRenewal(sub.nextDate, sub.cycle, today);
+      const date = advanceRenewal(renewalAnchor(sub), sub.cycle, today);
       return { sub, date, daysLeft: daysBetween(today, date) };
     })
     .filter(x => x.daysLeft >= 0 && x.daysLeft <= days)
@@ -124,7 +133,7 @@ export function monthlySpendTrend(subs, today, months = 12) {
     const y = Math.floor(idx / 12), m = idx - y * 12 + 1;
     let total = 0;
     for (const s of subs) {
-      const a = parseDate(s.nextDate);
+      const a = parseDate(renewalAnchor(s));
       if (!a) continue;
       const step = CYCLE_MONTHS[s.cycle];
       const anchor = a.y * 12 + (a.m - 1);
@@ -148,7 +157,7 @@ export function forecastNextMonths(subs, today, months = 12) {
     cols.push({ ym: `${y}-${pad(m)}`, label: `${m}월` });
   }
   const rows = subs.map(s => {
-    const a = parseDate(s.nextDate);
+    const a = parseDate(renewalAnchor(s));
     const step = CYCLE_MONTHS[s.cycle];
     const cells = cols.map((_, k) => {
       if (!a) return 0;
@@ -173,7 +182,7 @@ export function monthCalendar(subs, today) {
   const cur = t.y * 12 + (t.m - 1);
   const days = Array.from({ length: dim }, () => []);
   for (const s of subs) {
-    const a = parseDate(s.nextDate);
+    const a = parseDate(renewalAnchor(s));
     if (!a) continue;
     const step = CYCLE_MONTHS[s.cycle];
     const anchor = a.y * 12 + (a.m - 1);
@@ -381,7 +390,7 @@ export function parseBackup(text) {
     if (item) subscriptions.push(item); else skipped++;
   }
   const b = validateBudget(data.budget == null ? '' : String(data.budget));
-  return { valid: true, subscriptions, budget: b.valid ? b.value : 0, skipped };
+  return { valid: true, subscriptions, budget: b.valid ? b.value : 0, hasBudget: Object.hasOwn(data, 'budget') && b.valid, skipped };
 }
 /** Incoming subscriptions replace current ones with the same id; the rest are appended. */
 export function mergeSubscriptions(current, incoming) {
@@ -451,7 +460,7 @@ export function normalizeSubscription(s) {
   const r = validateSubscription(safe);
   if (!r.valid) return null;
   return {
-    ...r.value, id: s.id, demo: !!s.demo,
+    ...r.value, id: s.id, demo: !!s.demo, renewalAnchor: renewalAnchor(s),
     history: Array.isArray(s.history) ? s.history.filter(isPriceEntry) : [],
   };
 }
