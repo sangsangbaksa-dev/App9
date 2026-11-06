@@ -27,7 +27,7 @@ async function main(){
  const full=process.env.FULL_AUDIT==='1',simple=APP.startsWith('App');
  const langs=simple?['ko']:(full?['en','ko','ja','zh','es']:['en','ko']);
  const widths=full?[360,390,768,1280]:[360,1280];
- const schemes=full?['light','dark']:['light'];
+ const schemes=['light','dark'];
  const zones=full?['Asia/Seoul','America/New_York','Pacific/Auckland']:['Asia/Seoul'];
  const routes=simple?['/']:['/',APP==='quickbill'?'/app':'/app/'];
  const axe=fs.readFileSync(require.resolve('axe-core/axe.min.js'),'utf8');
