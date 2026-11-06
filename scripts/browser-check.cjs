@@ -1,9 +1,12 @@
 // Exercises the built Pages bundle with its production CSP. No real API or account calls.
-const {chromium}=require('playwright');
+const engines=require('playwright');
+const engineName=process.env.BROWSER_ENGINE||'chromium';
+if(!['chromium','firefox','webkit'].includes(engineName))throw new Error('Unsupported BROWSER_ENGINE');
+const engine=engines[engineName];
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..'), dist=path.join(root,'dist');
 const APP="App9";
-const out=path.join(root,'artifacts/browser');fs.mkdirSync(out,{recursive:true});
+const out=path.join(root,'artifacts/browser',engineName);fs.mkdirSync(out,{recursive:true});
 const TYPES={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2','.json':'application/json','.webmanifest':'application/manifest+json','.xml':'application/xml','.txt':'text/plain'};
 const csp=fs.readFileSync(path.join(dist,'_headers'),'utf8').match(/Content-Security-Policy:\s*(.*)/i)?.[1];
 let server,browser;
@@ -23,7 +26,7 @@ async function main(){
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const base='http://127.0.0.1:'+server.address().port;
- browser=await chromium.launch({...(process.env.BROWSER_EXECUTABLE_PATH?{executablePath:process.env.BROWSER_EXECUTABLE_PATH}:{}),args:['--no-sandbox']});
+ browser=await engine.launch({...(process.env.BROWSER_EXECUTABLE_PATH?{executablePath:process.env.BROWSER_EXECUTABLE_PATH}:{}),...(engineName==='chromium'?{args:['--no-sandbox']}:{})});
  const full=process.env.FULL_AUDIT==='1',simple=APP.startsWith('App');
  const langs=simple?['ko']:(full?['en','ko','ja','zh','es']:['en','ko']);
  const widths=full?[360,390,768,1280]:[360,1280];
@@ -62,21 +65,21 @@ async function main(){
     assert.deepEqual(audit.violations,[],'Accessibility violations');
     assert.deepEqual(errors,[],'Browser errors');
     results.push({label,route:local,ok:true});
-    if(!full||width===360&&timezoneId==='Asia/Seoul')await pg.screenshot({path:path.join(out,`${label}-${routeName}.png`),fullPage:true});
-   }catch(e){const f={label,route,message:e.message,errors:[...errors]};failures.push(f);results.push({...f,ok:false});await pg.screenshot({path:path.join(out,`${label}-${routeName}-failed.png`),fullPage:true}).catch(()=>{});}
+    if(engineName!=='webkit'&&(!full||width===360&&timezoneId==='Asia/Seoul'))await pg.screenshot({caret:'initial',path:path.join(out,`${label}-${routeName}.png`),fullPage:true});
+   }catch(e){const f={label,route,message:e.message,errors:[...errors]};failures.push(f);results.push({...f,ok:false});if(engineName!=='webkit')await pg.screenshot({caret:'initial',path:path.join(out,`${label}-${routeName}-failed.png`),fullPage:true}).catch(()=>{});}
   }
   await ctx.close();
   console.log(APP,label,failures.length?'failures='+failures.length:'OK');
  }
  const flowPath=path.join(__dirname,'browser-flows.cjs');
  if(fs.existsSync(flowPath)){
-  const ctx=await browser.newContext({viewport:{width:390,height:850},locale:APP.startsWith('App')?'ko':'en',timezoneId:'Asia/Seoul',serviceWorkers:'block',permissions:['clipboard-read','clipboard-write'],acceptDownloads:true});
+  const ctx=await browser.newContext({viewport:{width:390,height:850},locale:APP.startsWith('App')?'ko':'en',timezoneId:'Asia/Seoul',serviceWorkers:'block',permissions:engineName==='chromium'?['clipboard-read','clipboard-write']:[],acceptDownloads:true});
   const page=await ctx.newPage();page.setDefaultTimeout(10000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
   try{await require(flowPath)(page,base);assert.deepEqual(errors,[]);results.push({label:'functional',ok:true});}
-  catch(e){failures.push({label:'functional',message:e.message});await page.screenshot({path:path.join(out,'functional-failed.png'),fullPage:true});}
+  catch(e){failures.push({label:'functional',message:e.message});if(engineName!=='webkit')await page.screenshot({caret:'initial',path:path.join(out,'functional-failed.png'),fullPage:true});}
   await ctx.close();
  }
- fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({app:APP,results,failures},null,2));
+ fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({app:APP,engine:engineName,version:browser.version(),realDevice:false,screenshots:engineName!=='webkit',results,failures},null,2));
  assert.equal(failures.length,0,JSON.stringify(failures.slice(0,10),null,2));
  console.log(`${APP}: ${results.length} page checks passed`);
 }
