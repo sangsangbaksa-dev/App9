@@ -408,14 +408,14 @@ export function validateSubscription(input) {
   else if (name.length > 40) errors.name = '이름은 40자 이하로 입력하세요.';
   if (!CATEGORIES.includes(input.category)) errors.category = '카테고리를 선택하세요.';
   if (!CURRENCIES.includes(input.currency)) errors.currency = '통화를 선택하세요.';
-  const amountRaw = input.amount;
-  const amount = typeof amountRaw === 'number' ? amountRaw : (String(amountRaw ?? '').trim() === '' ? NaN : Number(amountRaw));
+  const numeric = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) ? Number(value) : NaN;
+  const amount = numeric(input.amount);
   if (!Number.isFinite(amount) || amount <= 0) errors.amount = '0보다 큰 금액을 입력하세요.';
   else if (amount > 1e9) errors.amount = '금액이 너무 큽니다.';
   else if (input.currency === 'KRW' && !Number.isInteger(amount)) errors.amount = '원화는 정수로 입력하세요.';
   let rate = DEFAULT_RATE;
   if (input.currency === 'USD') {
-    rate = Number(input.rate);
+    rate = numeric(input.rate);
     if (!Number.isFinite(rate) || rate <= 0 || rate > 100000) errors.rate = '환율을 올바르게 입력하세요.';
   }
   if (!CYCLES.includes(input.cycle)) errors.cycle = '결제 주기를 선택하세요.';
@@ -429,7 +429,7 @@ export function validateSubscription(input) {
     else errors.trialEnds = '체험 종료일을 올바르게 입력하세요.';
   }
   const peopleRaw = input.sharers;
-  const people = peopleRaw === undefined || peopleRaw === null || String(peopleRaw).trim() === '' ? 1 : Number(peopleRaw);
+  const people = peopleRaw === undefined || peopleRaw === null || String(peopleRaw).trim() === '' ? 1 : numeric(peopleRaw);
   if (!Number.isInteger(people) || people < 1 || people > SHARERS_MAX) {
     errors.sharers = `함께 쓰는 인원은 1~${SHARERS_MAX}명으로 입력하세요.`;
   }
