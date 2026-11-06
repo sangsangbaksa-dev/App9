@@ -375,7 +375,7 @@ export function toBackup(subs, budget = 0, exportedAt = '') {
 /** Parse a backup file's text. Items that fail validation are counted in `skipped`. */
 export function parseBackup(text) {
   let data;
-  try { data = JSON.parse(String(text)); }
+  try { data = JSON.parse(String(text).replace(/^\uFEFF/, '')); }
   catch { return { valid: false, error: 'JSON 형식이 아니에요.' }; }
   if (!data || typeof data !== 'object' || data.app !== BACKUP_APP || !Array.isArray(data.subscriptions)) {
     return { valid: false, error: '이 앱에서 내보낸 백업 파일이 아니에요.' };

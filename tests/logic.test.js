@@ -479,3 +479,11 @@ test('backup preserves an explicitly cleared budget and distinguishes legacy mis
   const broken = parseBackup(JSON.stringify({ app: 'renewal-ledger', subscriptions: [], budget: 'wrong' }));
   assert.equal(broken.hasBudget, false);
 });
+
+test('backup accepts UTF-8 BOM without changing Korean text', () => {
+  const source = [mk({ name: '한글 구독' })];
+  const back = parseBackup('\uFEFF' + toBackup(source, 10000));
+  assert.equal(back.valid, true);
+  assert.equal(back.subscriptions.length, source.length);
+  assert.equal(back.subscriptions[0].name, source[0].name);
+});
