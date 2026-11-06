@@ -501,3 +501,15 @@ test('numeric fields reject booleans and arrays instead of silently coercing imp
   }
   assert.equal(validateSubscription({...base, amount: '10.5', rate: '1350'}).valid, true);
 });
+
+
+test('backup budgets reject container coercion while preserving numeric form values', () => {
+  for (const budget of [[100], [], { value: 100 }, true, false]) {
+    assert.equal(validateBudget(budget).valid, false);
+    const parsed = parseBackup(JSON.stringify({ app: 'renewal-ledger', subscriptions: [mk()], budget }));
+    assert.equal(parsed.hasBudget, false);
+    assert.equal(parsed.budget, 0);
+  }
+  assert.equal(validateBudget('100').value, 100);
+  assert.equal(parseBackup(toBackup([mk()], 100)).budget, 100);
+});

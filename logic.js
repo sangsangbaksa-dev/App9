@@ -237,6 +237,7 @@ export function trialAlerts(subs, today, days = TRIAL_WARN_DAYS, dismissed = [])
 
 /** Empty input clears the budget (value 0). Otherwise a whole number of won, 0 or more. */
 export function validateBudget(raw) {
+  if (raw != null && typeof raw !== 'number' && typeof raw !== 'string') return { valid: false, value: 0, error: '예산은 숫자로 입력하세요.' };
   const s = String(raw ?? '').trim();
   if (s === '') return { valid: true, value: 0 };
   const n = Number(s);
@@ -389,7 +390,7 @@ export function parseBackup(text) {
     const item = normalizeSubscription(raw);
     if (item) subscriptions.push(item); else skipped++;
   }
-  const b = validateBudget(data.budget == null ? '' : String(data.budget));
+  const b = validateBudget(data.budget);
   return { valid: true, subscriptions, budget: b.valid ? b.value : 0, hasBudget: Object.hasOwn(data, 'budget') && b.valid, skipped };
 }
 /** Incoming subscriptions replace current ones with the same id; the rest are appended. */
