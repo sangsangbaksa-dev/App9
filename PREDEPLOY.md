@@ -24,7 +24,7 @@ Node.js 22 이상을 사용합니다. `npm ci`는 고정된 개발용 도구 버
 - `npm run check`: 단위 테스트 → 공개 파일 빌드 → 로컬 링크와 비공개 파일 혼입 검사.
 - `npm run test:browser`: dist를 로컬 HTTP로 열고 CSP, 모바일/데스크톱, 접근성 및 앱별 주요 흐름을 확인합니다. 실제 API 호출·계정 생성·구매는 하지 않습니다.
 - `FULL_AUDIT=1 npm run test:browser`: 지원 언어, 360/390/768/1280px, light/dark, 서울/뉴욕/오클랜드 시간대를 조합해 검사합니다.
-- 결과: `artifacts/browser/report.json`, 스크린샷. 이 폴더와 `dist/`는 Git에 포함하지 않습니다.
+- 결과: `artifacts/browser/<engine>/report.json`, 스크린샷. 이 폴더와 `dist/`는 Git에 포함하지 않습니다.
 
 ## 배포 파일
 
@@ -36,3 +36,9 @@ GitHub Actions의 **Verify deployment bundle**은 테스트와 파일 생성만 
 
 - 대상 Cloudflare 계정과 Pages 프로젝트, 연결할 도메인·주소를 소유자가 확인해야 합니다. 토큰이나 계정 ID를 코드에 넣지 마세요.
 - 이번 검증은 로컬 환경과 고정된 테스트 데이터 기준입니다. 프로덕션 사용자 데이터, 실제 계정 인증, 실제 구매·환불을 검증한 것은 아닙니다.
+
+## 브라우저 엔진 검증
+
+기본 `npm run test:browser`는 Chromium으로 실행합니다. `npx playwright install firefox webkit`과 해당 OS 종속성을 준비한 뒤 `BROWSER_ENGINE=firefox npm run test:browser` 또는 `BROWSER_ENGINE=webkit npm run test:browser`로 같은 회귀 흐름을 검사합니다. 결과는 `artifacts/browser/<engine>/`에 저장됩니다. WebKit은 Safari 및 실제 iOS 기기 검증을 대신하지 않습니다. 클립보드 권한 자동 허용은 Chromium에서만 사용하므로 다른 엔진의 모든 클립보드 동작을 검증했다고 해석하지 마세요.
+
+WebKit 검사는 CSP 오류의 원인이 되는 Playwright의 임시 스크린샷 스타일 삽입을 피하기 위해 스크린샷을 생략합니다. 접근성·레이아웃·기능 검사는 그대로 실행하며 보안 정책 오류를 무시하지 않습니다. 화면 캡처는 Chromium·Firefox 결과를 사용합니다.
