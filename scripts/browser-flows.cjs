@@ -11,7 +11,7 @@ module.exports=async function(page,base){
  assert.equal((await saved())[0].renewalAnchor,'2026-01-31');
  await page.fill('#budgetInput','50000');await page.click('#budgetForm [type=submit]');
  await page.setInputFiles('#importFile',{name:'empty-budget.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({app:'renewal-ledger',version:2,budget:0,subscriptions:[]}))});
- await page.click('#confirmOk');assert.equal(await page.evaluate(()=>localStorage.getItem('renewal-ledger:budget')),'0');
+ await page.click('#confirmOk');await page.waitForFunction(()=>localStorage.getItem('renewal-ledger:budget')==='0');assert.equal(await page.evaluate(()=>localStorage.getItem('renewal-ledger:budget')),'0');
 
  await page.getByRole('button',{name:'월말 구독 수정',exact:true}).click();await page.fill('#fDate','2026-03-15');await page.click('#subForm [type=submit]');
  await page.clock.setSystemTime(new Date('2026-04-01T12:00:00+09:00'));await page.reload();assert.equal((await saved())[0].nextDate,'2026-04-15');
