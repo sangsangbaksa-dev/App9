@@ -487,3 +487,17 @@ test('backup accepts UTF-8 BOM without changing Korean text', () => {
   assert.equal(back.subscriptions.length, source.length);
   assert.equal(back.subscriptions[0].name, source[0].name);
 });
+
+
+test('numeric fields reject booleans and arrays instead of silently coercing imported prices', () => {
+  const base = mk({currency: 'USD', amount: 10, rate: 1350});
+  for (const malformed of [true, false, [100], {value: 100}]) {
+    assert.ok(validateSubscription({...base, amount: malformed}).errors.amount);
+    assert.ok(validateSubscription({...base, rate: malformed}).errors.rate);
+    assert.ok(validateSubscription({...base, sharers: malformed}).errors.sharers);
+    const backup = parseBackup(toBackup([{...base, amount: malformed}]));
+    assert.equal(backup.skipped, 1);
+    assert.equal(backup.subscriptions.length, 0);
+  }
+  assert.equal(validateSubscription({...base, amount: '10.5', rate: '1350'}).valid, true);
+});

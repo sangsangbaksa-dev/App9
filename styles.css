@@ -417,3 +417,10 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
   border:1px solid var(--border);border-radius:12px;background:var(--surface-2);color:var(--text);font-size:.9rem;line-height:1.55}
 .backup-status::before{content:"";flex:none;width:8px;height:8px;margin-top:.55em;border-radius:50%;background:var(--accent)}
 @media(max-width:480px){.recovery .head-actions .btn{flex:1 1 auto}}
+
+/* A quiet control surface separates list tools from the subscription cards. */
+.toolbar{padding:var(--s4);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:var(--s4)}
+.toolbar input,.toolbar select{background:var(--surface)}
+.toolbar-foot{padding-top:var(--s2);border-top:1px solid var(--border)}
+.toolbar .field:focus-within{color:var(--accent-label)}
+@media(max-width:480px){.toolbar{padding:var(--s3)}.toolbar-foot .btn{flex:1 1 auto}}
