@@ -3,56 +3,53 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>구독 갱신 장부</title>
-<meta name="description" content="잊고 지나가는 구독료가 없도록 정기 결제와 갱신일을 한눈에 관리하는 구독 갱신 장부.">
-<meta name="theme-color" content="#0B6E4F" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0A1628" media="(prefers-color-scheme: dark)">
-<meta property="og:type" content="website">
-<meta property="og:title" content="구독 갱신 장부">
-<meta property="og:description" content="정기 결제와 갱신일을 한곳에 모으고, 갱신 전에 미리 알려 드려요.">
-<meta property="og:locale" content="ko_KR">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230B6E4F'/%3E%3Cpath d='M9 11h14M9 16h14M9 21h8' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='21' r='3.5' fill='%23ffd36e'/%3E%3C/svg%3E">
+<meta name="color-scheme" content="light dark">
+<title data-i18n="docTitle">구독 갱신 장부</title>
+<meta name="description" content="잊고 지나가는 구독료가 없도록 정기 결제와 갱신일을 한눈에 관리하는 구독 갱신 장부." data-i18n-attr="content=metaDesc">
+<meta name="theme-color" content="#2F4A8F" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1422" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232F4A8F'/%3E%3Cpath d='M9 11h14M9 16h14M9 21h8' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<a class="skip" href="#main">본문으로 건너뛰기</a>
+<a class="skip" href="#main" data-i18n="skipLink">본문으로 건너뛰기</a>
 
 <div class="appbar" id="appbar">
   <div class="wrap appbar-inner">
-    <a class="brand" href="#top" aria-label="구독 갱신 장부 홈"><svg class="logo-svg" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#0B6E4F"/><path d="M9 11h14M9 16h14M9 21h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="21" r="3.5" fill="#ffd36e"/></svg><span>구독 갱신 장부</span></a>
-    <nav class="site-nav" aria-label="주요 메뉴">
-      <a href="#digestCard">브리핑</a>
-      <a href="#budgetCard">예산</a>
-      <a href="#calH">달력</a>
-      <a href="#listH">구독 목록</a>
-      <a href="#bkH">백업</a>
+    <a class="brand" href="#top" data-i18n-attr="aria-label=homeAria"><span class="logo" aria-hidden="true"></span><span data-i18n="siteName">구독 갱신 장부</span></a>
+    <nav class="site-nav" aria-label="주요 메뉴" data-i18n-attr="aria-label=menuLabel">
+      <a href="#digestCard" data-i18n="navDigest">브리핑</a>
+      <a href="#budgetCard" data-i18n="navBudget">예산</a>
+      <a href="#calendar" data-i18n="navCal">달력</a>
+      <a href="#records" data-i18n="navList">구독 목록</a>
+      <a href="#backup" data-i18n="navBackup">백업</a>
     </nav>
-    <p class="bar-total">이번 달 <strong id="barTotal">0원</strong></p>
-    <button class="btn primary small appbar-cta" type="button" onclick="document.getElementById('addBtn').click()">구독 추가</button>
-    <button id="themeBtn" class="btn ghost small" type="button" aria-label="테마 전환">테마 전환</button>
+    <p class="bar-total"><span data-i18n="appbarTotal">이번 달</span> <strong id="barTotal">0원</strong></p>
+    <label class="lang-field"><span class="sr-only" data-i18n="langLabel">언어</span><select id="langSelect" aria-label="언어"></select></label>
+    <button id="themeBtn" class="btn ghost small" type="button" data-i18n="themeToggle">테마 전환</button>
   </div>
 </div>
 
 <header class="hero" id="top">
   <div class="wrap hero-inner">
     <div class="hero-grid">
-      <div>
-        <h1>잊고 낸 구독료,<br>이제 <em>0원</em>으로.</h1>
-        <p class="lead">정기 결제를 한 곳에 모으고, 갱신일 전에 미리 알려드려요.</p>
+      <div class="hero-copy">
+        <h1 data-i18n="heroTitle">잊고 낸 구독료, 이제 0원으로.</h1>
+        <p class="lead" data-i18n="heroLead">정기 결제를 한 곳에 모으고, 갱신일 전에 미리 알려드려요.</p>
         <div class="hero-actions">
-          <button id="addBtn" class="btn primary" type="button">구독 추가</button>
-          <button id="demoBtn" class="btn glass" type="button">예시 데이터 불러오기</button>
+          <button id="addBtn" class="btn primary" type="button" data-i18n="addBtn">구독 추가</button>
+          <button id="demoBtn" class="btn link" type="button" data-i18n="heroDemo">예시 데이터 불러오기</button>
         </div>
       </div>
       <figure class="ledger-mock" aria-hidden="true">
-        <div class="lm-top"><b>구독 장부</b><small>예시 화면</small></div>
+        <div class="lm-top"><b data-i18n="mockTitle">구독 장부</b><small data-i18n="mockSample">예시 화면</small></div>
         <ul class="lm-list">
-          <li><span class="lm-name">영상 스트리밍</span><span class="lm-cycle">매월</span><span class="lm-amt">17,000원</span><span class="lm-d">D-3</span></li>
-          <li><span class="lm-name">음악 스트리밍</span><span class="lm-cycle">매월</span><span class="lm-amt">10,900원</span><span class="lm-d">D-9</span></li>
-          <li><span class="lm-name">클라우드 저장소</span><span class="lm-cycle">매년</span><span class="lm-amt">13,000원</span><span class="lm-d ok">D-41</span></li>
-          <li><span class="lm-name">개발 도구</span><span class="lm-cycle">분기</span><span class="lm-amt">39,600원</span><span class="lm-d ok">D-62</span></li>
+          <li><span class="lm-name" data-i18n="mockName1">영상 스트리밍</span><span class="lm-cycle" data-i18n="cycleMonthly">매월</span><span class="lm-amt" data-i18n="mockAmt1">17,000원</span><span class="lm-d">D-3</span></li>
+          <li><span class="lm-name" data-i18n="mockName2">음악 스트리밍</span><span class="lm-cycle" data-i18n="cycleMonthly">매월</span><span class="lm-amt" data-i18n="mockAmt2">10,900원</span><span class="lm-d">D-9</span></li>
+          <li><span class="lm-name" data-i18n="mockName3">클라우드 저장소</span><span class="lm-cycle" data-i18n="cycleYearly">매년</span><span class="lm-amt" data-i18n="mockAmt3">13,000원</span><span class="lm-d ok">D-41</span></li>
+          <li><span class="lm-name" data-i18n="mockName4">개발 도구</span><span class="lm-cycle" data-i18n="cycleQuarterly">분기</span><span class="lm-amt" data-i18n="mockAmt4">39,600원</span><span class="lm-d ok">D-62</span></li>
         </ul>
-        <div class="lm-foot"><span>월 지출 (추정)</span><strong>28,983원</strong></div>
+        <div class="lm-foot"><span data-i18n="mockFoot">월 지출 (추정)</span><strong data-i18n="mockTotal">28,983원</strong></div>
       </figure>
     </div>
     <div class="stats" id="stats" aria-live="polite"></div>
@@ -61,25 +58,25 @@
 
 <main id="main" class="wrap">
   <section id="trialAlerts" class="alerts" aria-labelledby="trialH" hidden>
-    <h2 id="trialH" class="alerts-title" tabindex="-1">무료 체험 알림</h2>
+    <h2 id="trialH" class="alerts-title" tabindex="-1" data-i18n="trialTitle">무료 체험 알림</h2>
     <ul id="trialList" class="alert-list"></ul>
   </section>
 
   <section class="card ai-card" id="digestCard" aria-labelledby="digestH">
     <div class="card-head">
-      <h2 id="digestH">AI 갱신 브리핑 <span id="aiMode" class="tag est">기본 브리핑</span></h2>
+      <h2 id="digestH"><span data-i18n="digestTitle">AI 갱신 브리핑</span> <span id="aiMode" class="tag est" data-i18n="digestLocal">기본 브리핑</span></h2>
       <div class="head-actions">
-        <button id="aiRunBtn" class="btn primary small" type="button">브리핑 만들기</button>
-        <button id="aiKeyToggle" class="btn ghost small" type="button" aria-expanded="false" aria-controls="aiKeyBox">API 키 설정</button>
+        <button id="aiRunBtn" class="btn primary small" type="button" data-i18n="aiRun">브리핑 만들기</button>
+        <button id="aiKeyToggle" class="btn ghost small" type="button" aria-expanded="false" aria-controls="aiKeyBox" data-i18n="aiKeySet">API 키 설정</button>
       </div>
     </div>
-    <p class="hint">30일 안의 갱신과 최근 1년 안의 큰 가격 인상을 정리해요. 키가 없으면 장부 기록으로 계산한 기본 브리핑을 보여 줘요. AI에는 서비스 이름, 금액, 주기, 갱신일, 가격 변경 기록만 보내고 메모와 인원은 보내지 않아요.</p>
+    <p class="hint" data-i18n="digestHint">30일 안의 갱신과 최근 1년 안의 큰 가격 인상을 정리해요. 키가 없으면 장부 기록으로 계산한 기본 브리핑을 보여 줘요. AI에는 서비스 이름, 금액, 주기, 갱신일, 가격 변경 기록만 보내고 메모와 인원은 보내지 않아요.</p>
     <div id="aiKeyBox" class="ai-key" hidden>
-      <div class="field"><label for="aiKeyInput">Anthropic API 키</label><input id="aiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."></div>
-      <p class="hint">키는 이 브라우저의 localStorage에만 저장되고, 브리핑을 만들 때 api.anthropic.com으로만 전송돼요. 공용 컴퓨터에서는 저장하지 마세요.</p>
+      <div class="field"><label for="aiKeyInput" data-i18n="aiKeyLabel">Anthropic API 키</label><input id="aiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."></div>
+      <p class="hint" data-i18n="aiKeyNote">키는 이 브라우저의 localStorage에만 저장되고, 브리핑을 만들 때 api.anthropic.com으로만 전송돼요. 공용 컴퓨터에서는 저장하지 마세요.</p>
       <div class="head-actions">
-        <button id="aiKeySave" class="btn primary small" type="button">키 저장</button>
-        <button id="aiKeyClear" class="btn ghost small" type="button">키 삭제</button>
+        <button id="aiKeySave" class="btn primary small" type="button" data-i18n="aiKeySave">키 저장</button>
+        <button id="aiKeyClear" class="btn ghost small" type="button" data-i18n="aiKeyDel">키 삭제</button>
       </div>
     </div>
     <div id="digestOut" class="digest-out" aria-live="polite"></div>
@@ -87,7 +84,7 @@
 
   <section class="grid2" aria-label="요약">
     <article class="card" aria-labelledby="catH">
-      <h2 id="catH">카테고리별 월 지출</h2>
+      <h2 id="catH" data-i18n="catTitle">카테고리별 월 지출</h2>
       <div class="donut-wrap">
         <div id="donut" class="donut" role="img" aria-label="카테고리별 지출 도넛 차트"></div>
         <ul id="legend" class="legend"></ul>
@@ -95,38 +92,38 @@
     </article>
     <article class="card" aria-labelledby="upH">
       <div class="card-head">
-        <h2 id="upH">곧 갱신</h2>
+        <h2 id="upH" data-i18n="upTitle">곧 갱신</h2>
         <div class="seg" role="group" aria-label="기간 선택">
-          <button type="button" class="seg-btn" data-range="7" aria-pressed="true">7일</button>
-          <button type="button" class="seg-btn" data-range="30" aria-pressed="false">30일</button>
+          <button type="button" class="seg-btn" data-range="7" aria-pressed="true" data-i18n="range7">7일</button>
+          <button type="button" class="seg-btn" data-range="30" aria-pressed="false" data-i18n="range30">30일</button>
         </div>
       </div>
       <ol id="timeline" class="timeline"></ol>
-      <button id="icsBtn" class="btn ghost small" type="button">캘린더(.ics)로 내보내기</button>
+      <button id="icsBtn" class="btn ghost small" type="button" data-i18n="icsExport">캘린더(.ics)로 내보내기</button>
     </article>
   </section>
 
   <section class="grid2" aria-label="지출 추이와 예산">
     <article class="card" aria-labelledby="trendH">
       <div class="card-head">
-        <h2 id="trendH">월 지출 추이 (최근 12개월) <span class="tag est">추정</span></h2>
+        <h2 id="trendH"><span data-i18n="trendTitle">월 지출 추이 (최근 12개월)</span> <span class="tag est" data-i18n="estTag">추정</span></h2>
       </div>
       <p id="trendSummary" class="trend-summary" aria-live="polite"></p>
       <div id="trend" class="trend"></div>
-      <p class="hint">현재 구독을 기준으로 계산한 추정치예요. 실제 결제 내역과 다를 수 있어요.</p>
+      <p class="hint" data-i18n="trendNote">현재 구독을 기준으로 계산한 추정치예요. 실제 결제 내역과 다를 수 있어요.</p>
     </article>
 
     <article class="card" id="budgetCard" aria-labelledby="budH">
       <div class="card-head">
-        <h2 id="budH">월 예산</h2>
+        <h2 id="budH" data-i18n="budgetTitle">월 예산</h2>
         <span id="budgetState" class="tag ok" hidden></span>
       </div>
       <form id="budgetForm" class="budget-form" novalidate>
-        <label for="budgetInput">이번 달 목표 지출 (원)</label>
+        <label for="budgetInput" data-i18n="budgetLabel">이번 달 목표 지출 (원)</label>
         <div class="budget-row">
-          <input id="budgetInput" name="budget" type="text" inputmode="numeric" autocomplete="off" placeholder="예: 150000">
-          <button type="submit" class="btn primary small">저장</button>
-          <button type="button" id="budgetClear" class="btn ghost small">해제</button>
+          <input id="budgetInput" name="budget" type="text" inputmode="numeric" autocomplete="off" data-i18n-attr="placeholder=budgetPh" placeholder="예: 150000">
+          <button type="submit" class="btn primary small" data-i18n="budgetSave">저장</button>
+          <button type="button" id="budgetClear" class="btn ghost small" data-i18n="budgetRelease">해제</button>
         </div>
         <p class="err" id="budgetErr" role="alert"></p>
       </form>
@@ -137,17 +134,17 @@
 
   <section class="card" aria-labelledby="fcH">
     <div class="card-head">
-      <h2 id="fcH">12개월 지출 예측 <span class="tag est">추정</span></h2>
+      <h2 id="fcH"><span data-i18n="fcTitle">12개월 지출 예측</span> <span class="tag est" data-i18n="estTag">추정</span></h2>
       <span id="forecastTotal" class="trend-summary"></span>
     </div>
-    <p class="hint">현재 구독의 결제 주기로 계산한 추정치예요. 가격 인상, 해지, 환율 변동은 반영하지 않아요. 표의 단위는 원입니다.</p>
+    <p class="hint" data-i18n="fcHint">현재 구독의 결제 주기로 계산한 추정치예요. 가격 인상, 해지, 환율 변동은 반영하지 않아요. 표의 단위는 원입니다.</p>
     <div id="forecast" class="table-wrap"></div>
   </section>
 
   <section class="grid2" aria-label="달력과 해지 시뮬레이터">
     <article class="card" id="calendar" aria-labelledby="calH">
       <div class="card-head">
-        <h2 id="calH"><span id="calTitle">이번 달</span> 갱신 달력 <span class="tag est">추정</span></h2>
+        <h2 id="calH"><span id="calTitle"></span> <span data-i18n="calHead">갱신 달력</span> <span class="tag est" data-i18n="estTag">추정</span></h2>
       </div>
       <div id="calGrid" class="cal-grid" role="group" aria-label="이번 달 갱신 달력"></div>
       <ul id="calList" class="cal-list"></ul>
@@ -155,10 +152,10 @@
 
     <article class="card" aria-labelledby="simH">
       <div class="card-head">
-        <h2 id="simH">해지 시뮬레이터</h2>
-        <button id="simReset" class="btn ghost small" type="button">선택 초기화</button>
+        <h2 id="simH" data-i18n="simTitle">해지 시뮬레이터</h2>
+        <button id="simReset" class="btn ghost small" type="button" data-i18n="simResetBtn">선택 초기화</button>
       </div>
-      <p class="hint">해지할 구독을 체크하면 절약액을 미리 계산해요. 저장되지 않는 임시 계산입니다.</p>
+      <p class="hint" data-i18n="simHint">해지할 구독을 체크하면 절약액을 미리 계산해요. 저장되지 않는 임시 계산입니다.</p>
       <ul id="simList" class="sim-list"></ul>
       <div id="simResult" class="sim-result" aria-live="polite"></div>
     </article>
@@ -168,40 +165,40 @@
 
   <section class="grid2" aria-label="비교와 리포트">
     <article class="card" id="compareCard" aria-labelledby="cmpH">
-      <h2 id="cmpH">구독 비교</h2>
-      <p class="hint">두 구독의 결제액, 내 부담, 갱신일을 나란히 봅니다. 차이는 B에서 A를 뺀 값이에요. 추정 값입니다.</p>
+      <h2 id="cmpH" data-i18n="cmpTitle">구독 비교</h2>
+      <p class="hint" data-i18n="cmpHint">두 구독의 결제액, 내 부담, 갱신일을 나란히 봅니다. 차이는 B에서 A를 뺀 값이에요. 추정 값입니다.</p>
       <div class="row2">
-        <div class="field"><label for="cmpA">구독 A</label><select id="cmpA"></select></div>
-        <div class="field"><label for="cmpB">구독 B</label><select id="cmpB"></select></div>
+        <div class="field"><label for="cmpA" data-i18n="cmpA">구독 A</label><select id="cmpA"></select></div>
+        <div class="field"><label for="cmpB" data-i18n="cmpB">구독 B</label><select id="cmpB"></select></div>
       </div>
       <div id="cmpOut" class="cmp-out" aria-live="polite"></div>
     </article>
     <article class="card" aria-labelledby="repH">
-      <h2 id="repH">인쇄용 리포트</h2>
-      <p class="hint">월·연 지출 추정, 카테고리 비중, 30일 안의 갱신 목록을 인쇄 화면으로 펼칩니다. 인쇄 대화상자에서 PDF로 저장할 수 있어요.</p>
-      <button id="printBtn" class="btn ghost small" type="button">인쇄용 보기</button>
+      <h2 id="repH" data-i18n="repTitle">인쇄용 리포트</h2>
+      <p class="hint" data-i18n="repHint">월·연 지출 추정, 카테고리 비중, 30일 안의 갱신 목록을 인쇄 화면으로 펼칩니다. 인쇄 대화상자에서 PDF로 저장할 수 있어요.</p>
+      <button id="printBtn" class="btn ghost small" type="button" data-i18n="printView">인쇄용 보기</button>
     </article>
   </section>
 
   <section id="records" aria-labelledby="listH" class="card">
     <div class="card-head">
-      <h2 id="listH" tabindex="-1">전체 구독 <span id="demoTag" class="tag demo" hidden>예시 데이터</span></h2>
+      <h2 id="listH" tabindex="-1"><span data-i18n="listTitle">전체 구독</span> <span id="demoTag" class="tag demo" data-i18n="demoTag" hidden>예시 데이터</span></h2>
       <div class="head-actions">
-        <button id="csvBtn" class="btn ghost small" type="button">CSV 내보내기</button>
-        <button id="clearBtn" class="btn danger small" type="button">전체 삭제</button>
+        <button id="csvBtn" class="btn ghost small" type="button" data-i18n="csvExport">CSV 내보내기</button>
+        <button id="clearBtn" class="btn danger small" type="button" data-i18n="clearBtn">전체 삭제</button>
       </div>
     </div>
     <div class="toolbar">
-      <div class="field"><label for="flQuery">서비스 검색</label><input id="flQuery" type="search" placeholder="예: 넷플릭스" autocomplete="off"></div>
+      <div class="field"><label for="flQuery" data-i18n="flQueryLabel">서비스 검색</label><input id="flQuery" type="search" data-i18n-attr="placeholder=flQueryPh" placeholder="예: 넷플릭스" autocomplete="off"></div>
       <div class="filters">
-        <div class="field"><label for="flCat">카테고리</label><select id="flCat"><option value="">전체</option></select></div>
-        <div class="field"><label for="flStatus">상태</label><select id="flStatus"><option value="">전체</option></select></div>
-        <div class="field"><label for="flCur">통화</label><select id="flCur"><option value="">전체</option></select></div>
-        <div class="field"><label for="flSort">정렬</label><select id="flSort"><option value="next">다음 갱신일 순</option><option value="monthly">월 비용 높은 순</option><option value="name">이름 순</option></select></div>
+        <div class="field"><label for="flCat" data-i18n="flCatLabel">카테고리</label><select id="flCat"></select></div>
+        <div class="field"><label for="flStatus" data-i18n="flStatusLabel">상태</label><select id="flStatus"></select></div>
+        <div class="field"><label for="flCur" data-i18n="flCurLabel">통화</label><select id="flCur"></select></div>
+        <div class="field"><label for="flSort" data-i18n="flSortLabel">정렬</label><select id="flSort"></select></div>
       </div>
       <div class="toolbar-foot">
         <p id="resultInfo" class="hint" aria-live="polite"></p>
-        <button id="flReset" type="button" class="btn ghost small">필터 초기화</button>
+        <button id="flReset" type="button" class="btn ghost small" data-i18n="flReset">필터 초기화</button>
       </div>
     </div>
     <div id="dupWarn" class="notice" role="note" hidden></div>
@@ -210,12 +207,12 @@
 
   <section id="backup" class="card" aria-labelledby="bkH">
     <div class="card-head">
-      <h2 id="bkH">백업과 복원</h2>
+      <h2 id="bkH" data-i18n="bkTitle">백업과 복원</h2>
     </div>
-    <p class="hint">구독 목록과 예산을 JSON 파일로 저장하거나 복원해요. 가져오기는 같은 ID의 구독을 파일 내용으로 바꾸고, 나머지는 추가합니다.</p>
+    <p class="hint" data-i18n="bkHint">구독 목록과 예산을 JSON 파일로 저장하거나 복원해요. 가져오기는 같은 ID의 구독을 파일 내용으로 바꾸고, 나머지는 추가합니다.</p>
     <div class="head-actions backup-actions">
-      <button id="jsonExportBtn" class="btn primary small" type="button">JSON 백업 내보내기</button>
-      <button id="jsonImportBtn" class="btn ghost small" type="button">JSON 가져오기</button>
+      <button id="jsonExportBtn" class="btn primary small" type="button" data-i18n="jsonExport">JSON 백업 내보내기</button>
+      <button id="jsonImportBtn" class="btn ghost small" type="button" data-i18n="jsonImport">JSON 가져오기</button>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
     </div>
   </section>
@@ -225,57 +222,58 @@
 <footer class="site-foot">
   <div class="wrap foot-in">
     <div class="foot-brand">
-      <span class="brand"><svg class="logo-svg logo-sm" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="#0B6E4F"/><path d="M9 11h14M9 16h14M9 21h8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="21" r="3.5" fill="#ffd36e"/></svg><span>구독 갱신 장부</span></span>
-      <p>정기 구독의 갱신일과 월·연 지출을 한곳에서 관리하는 장부입니다.</p>
+      <span class="brand"><span class="logo" aria-hidden="true"></span><span data-i18n="siteName">구독 갱신 장부</span></span>
+      <p data-i18n="footerDesc">정기 구독의 갱신일과 월·연 지출을 한곳에서 관리하는 장부입니다.</p>
+      <p class="disclaimer" data-i18n="footerDisclaimer">추정 자료입니다. 실제 결제 내역과 다를 수 있으며, 세무·재무 자문이 아닙니다.</p>
     </div>
     <div class="foot-meta">
-      <p class="privacy">데이터는 이 브라우저에만 저장되고 서버로 보내지 않아요. USD는 입력한 환율로 원화 환산합니다.</p>
-      <p class="copy">&copy; 2026 구독 갱신 장부. All rights reserved.</p>
+      <p class="privacy" data-i18n="footerPrivacy">데이터는 이 브라우저에만 저장되고 서버로 보내지 않아요. USD는 입력한 환율로 원화 환산합니다.</p>
+      <p class="copy" data-i18n="footerCopy">© 2026 구독 갱신 장부</p>
     </div>
   </div>
 </footer>
 
 <dialog id="formDlg" aria-labelledby="formTitle">
   <form id="subForm" novalidate method="dialog">
-    <h2 id="formTitle">구독 추가</h2>
-    <div class="field"><label for="fName">서비스 이름</label><input id="fName" name="name" maxlength="40" autocomplete="off" required><p class="err" data-for="name"></p></div>
+    <h2 id="formTitle" data-i18n="formAdd">구독 추가</h2>
+    <div class="field"><label for="fName" data-i18n="fName">서비스 이름</label><input id="fName" name="name" maxlength="40" autocomplete="off" required><p class="err" data-for="name"></p></div>
     <div class="row2">
-      <div class="field"><label for="fCat">카테고리</label><select id="fCat" name="category"></select><p class="err" data-for="category"></p></div>
-      <div class="field"><label for="fCycle">결제 주기</label><select id="fCycle" name="cycle"></select><p class="err" data-for="cycle"></p></div>
+      <div class="field"><label for="fCat" data-i18n="fCat">카테고리</label><select id="fCat" name="category"></select><p class="err" data-for="category"></p></div>
+      <div class="field"><label for="fCycle" data-i18n="fCycle">결제 주기</label><select id="fCycle" name="cycle"></select><p class="err" data-for="cycle"></p></div>
     </div>
     <div class="row2">
-      <div class="field"><label for="fCur">통화</label><select id="fCur" name="currency"><option>KRW</option><option>USD</option></select><p class="err" data-for="currency"></p></div>
-      <div class="field"><label for="fAmt">금액</label><input id="fAmt" name="amount" type="number" inputmode="decimal" step="any" min="0"><p class="err" data-for="amount"></p></div>
+      <div class="field"><label for="fCur" data-i18n="fCur">통화</label><select id="fCur" name="currency"><option>KRW</option><option>USD</option></select><p class="err" data-for="currency"></p></div>
+      <div class="field"><label for="fAmt" data-i18n="fAmt">금액</label><input id="fAmt" name="amount" type="number" inputmode="decimal" step="any" min="0"><p class="err" data-for="amount"></p></div>
     </div>
     <div class="field" id="rateField" hidden>
-      <label for="fRate">환율 (1 USD = ? KRW)</label><input id="fRate" name="rate" type="number" inputmode="decimal" step="any" min="0" value="1350">
+      <label for="fRate" data-i18n="fRate">환율 (1 USD = ? KRW)</label><input id="fRate" name="rate" type="number" inputmode="decimal" step="any" min="0" value="1350">
       <p class="hint" id="krwPreview" aria-live="polite"></p><p class="err" data-for="rate"></p>
     </div>
     <div class="row2">
-      <div class="field"><label for="fDate">다음 갱신일</label><input id="fDate" name="nextDate" type="date"><p class="err" data-for="nextDate"></p></div>
-      <div class="field"><label for="fStatus">상태</label><select id="fStatus" name="status"></select><p class="err" data-for="status"></p></div>
+      <div class="field"><label for="fDate" data-i18n="fDate">다음 갱신일</label><input id="fDate" name="nextDate" type="date"><p class="err" data-for="nextDate"></p></div>
+      <div class="field"><label for="fStatus" data-i18n="fStatus">상태</label><select id="fStatus" name="status"></select><p class="err" data-for="status"></p></div>
     </div>
     <div class="row2">
-      <div class="field"><label for="fTrial">체험 종료일 (선택)</label><input id="fTrial" name="trialEnds" type="date"><p class="err" data-for="trialEnds"></p></div>
-      <div class="field"><label for="fPeople">함께 쓰는 인원</label><input id="fPeople" name="sharers" type="number" inputmode="numeric" step="1" min="1" max="20" value="1"><p class="hint" id="splitPreview" aria-live="polite"></p><p class="err" data-for="sharers"></p></div>
+      <div class="field"><label for="fTrial" data-i18n="fTrial">체험 종료일 (선택)</label><input id="fTrial" name="trialEnds" type="date"><p class="err" data-for="trialEnds"></p></div>
+      <div class="field"><label for="fPeople" data-i18n="fPeople">함께 쓰는 인원</label><input id="fPeople" name="sharers" type="number" inputmode="numeric" step="1" min="1" max="20" value="1"><p class="hint" id="splitPreview" aria-live="polite"></p><p class="err" data-for="sharers"></p></div>
     </div>
     <div class="field">
-      <label for="fNotes">메모 (선택, 200자 이내)</label><textarea id="fNotes" name="notes" rows="2" maxlength="200"></textarea><p class="hint" id="notesCount"></p><p class="err" data-for="notes"></p>
+      <label for="fNotes" data-i18n="fNotes">메모 (선택, 200자 이내)</label><textarea id="fNotes" name="notes" rows="2" maxlength="200"></textarea><p class="hint" id="notesCount"></p><p class="err" data-for="notes"></p>
     </div>
     <div class="dlg-actions">
-      <button type="button" class="btn ghost" id="cancelBtn">취소</button>
-      <button type="submit" class="btn primary">저장</button>
+      <button type="button" class="btn ghost" id="cancelBtn" data-i18n="cancelBtn">취소</button>
+      <button type="submit" class="btn primary" data-i18n="save">저장</button>
     </div>
   </form>
 </dialog>
 
 <dialog id="confirmDlg" aria-labelledby="confirmTitle">
   <form method="dialog">
-    <h2 id="confirmTitle">정말 삭제할까요?</h2>
+    <h2 id="confirmTitle" data-i18n="confirmTitle">정말 삭제할까요?</h2>
     <p id="confirmMsg"></p>
     <div class="dlg-actions">
-      <button value="cancel" class="btn ghost">취소</button>
-      <button value="ok" class="btn danger" id="confirmOk">삭제</button>
+      <button value="cancel" class="btn ghost" data-i18n="cancelBtn">취소</button>
+      <button value="ok" class="btn danger" id="confirmOk" data-i18n="deleteBtn">삭제</button>
     </div>
   </form>
 </dialog>
