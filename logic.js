@@ -639,3 +639,81 @@ export function parseDigestResponse(text) {
     flags: cleanList(data.flags, 'reason'),
   };
 }
+
+// ---- printable spend report and two-subscription comparison ----
+// All money here is an estimate from the ledger (no price changes, cancellations or FX moves are predicted).
+export const REPORT_NOTE = '추정 자료입니다. 실제 결제 내역과 다를 수 있으며, 세무·재무 자문이 아닙니다.';
+const krw = (n) => `${Math.round(Number(n) || 0).toLocaleString('en-US')}원`;
+
+/** Plain-text report for printing. Money is formatted here so the view only places strings. */
+export function buildSpendReport(subs, today, budget = 0, days = 30) {
+  const list = Array.isArray(subs) ? subs : [];
+  const monthly = list.reduce((t, s) => t + monthlyCost(s), 0);
+  const planned = savingsIfCancelled(list);
+  const b = budgetStatus(monthly, budget);
+  const budgetText = !b.enabled ? '설정 안 함'
+    : `${krw(b.budget)} (사용 ${Math.round(b.ratio * 100)}%${b.over ? ', 초과' : ''})`;
+  return {
+    title: '구독 지출 리포트',
+    date: today,
+    stats: [
+      { label: '월 지출 (추정)', value: krw(monthly) },
+      { label: '연 지출 (추정)', value: krw(monthly * 12) },
+      { label: '구독 수', value: `${list.length}개 (해지 예정 ${planned.count}개)` },
+      { label: '해지 예정 절약 (월)', value: krw(planned.monthly) },
+      { label: '월 예산', value: budgetText },
+    ],
+    categories: categoryTotals(list).map((c) => ({
+      category: c.category,
+      monthly: krw(c.monthly),
+      share: monthly > 0 ? `${Math.round((c.monthly / monthly) * 100)}%` : '-',
+    })),
+    upcoming: upcomingWithin(list, today, days).map((x) => ({
+      name: String(x.sub.name),
+      date: x.date,
+      daysLeft: x.daysLeft === 0 ? '오늘' : `D-${x.daysLeft}`,
+      amount: formatPrice(x.sub.amount, x.sub.currency),
+    })),
+    empty: list.length === 0,
+    note: REPORT_NOTE,
+  };
+}
+
+/** Side-by-side numbers for two subscriptions. Returns null if one is missing or both are the same. diff = right - left. */
+export function compareSubscriptions(a, b, today) {
+  if (!a || !b || !a.id || !b.id || a.id === b.id) return null;
+  const pick = (s) => {
+    const nextDate = advanceRenewal(s.nextDate, s.cycle, today);
+    return {
+      name: String(s.name),
+      charge: chargeKrw(s),
+      monthly: monthlyCost(s),
+      yearly: yearlyCost(s),
+      myMonthly: myMonthlyCost(s),
+      cycle: s.cycle,
+      nextDate,
+      daysLeft: daysBetween(today, nextDate),
+      changes: (Array.isArray(s.history) ? s.history : []).filter(isPriceEntry).length,
+      status: s.status,
+    };
+  };
+  const left = pick(a), right = pick(b);
+  const specs = [
+    { key: 'charge', label: '1회 결제액', unit: 'won' },
+    { key: 'monthly', label: '월 환산 (전체)', unit: 'won' },
+    { key: 'myMonthly', label: '내 부담 (월)', unit: 'won' },
+    { key: 'yearly', label: '연 환산 (전체)', unit: 'won' },
+    { key: 'cycle', label: '결제 주기', unit: 'text' },
+    { key: 'nextDate', label: '다음 갱신일', unit: 'text' },
+    { key: 'daysLeft', label: '갱신까지', unit: 'days' },
+    { key: 'changes', label: '가격 변경 기록', unit: 'count' },
+    { key: 'status', label: '상태', unit: 'text' },
+  ];
+  const rows = specs.map((s) => {
+    const numeric = s.unit !== 'text';
+    const diff = numeric && left[s.key] != null && right[s.key] != null
+      ? Math.round((right[s.key] - left[s.key]) * 100) / 100 : null;
+    return { ...s, left: left[s.key], right: right[s.key], diff };
+  });
+  return { left, right, rows };
+}

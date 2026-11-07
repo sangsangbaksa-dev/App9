@@ -572,3 +572,61 @@ test('isPlausibleKey and aiErrorMessage', () => {
 test('sanitizePromptText removes control characters and brackets', () => {
   assert.equal(sanitizePromptText('a<b>\u0001  c', 20), 'ab c');
 });
+
+// ---- printable spend report and comparison ----
+import { buildSpendReport, compareSubscriptions, REPORT_NOTE } from '../logic.js';
+
+const SPEND_TODAY = '2026-03-10';
+const sa = { id: 'a', name: 'Netflix형 스트리밍', category: '스트리밍', amount: 17000, currency: 'KRW', cycle: '매월', nextDate: '2026-03-14', status: '사용 중', sharers: 2, history: [] };
+const sb = { id: 'b', name: 'Cloud 저장소', category: '클라우드', amount: 10, currency: 'USD', rate: 1300, cycle: '매년', nextDate: '2026-03-01', status: '해지 예정', sharers: 1, history: [{ date: '2025-03-01', from: '8', to: '10' }] };
+
+test('buildSpendReport: empty ledger', () => {
+  const r = buildSpendReport([], SPEND_TODAY, 0);
+  assert.equal(r.empty, true);
+  assert.equal(r.stats[0].value, '0원');
+  assert.equal(r.stats[4].value, '설정 안 함');
+  assert.equal(r.note, REPORT_NOTE);
+  assert.equal(r.categories.length, 0);
+});
+test('buildSpendReport: totals, savings, shares and upcoming renewals', () => {
+  const r = buildSpendReport([sa, sb], SPEND_TODAY, 0, 30);
+  // sb: 10 USD * 1300 / 12 per month = 1083.33 -> rounds to 1,083원
+  assert.equal(r.stats[0].value, '18,083원');
+  assert.equal(r.stats[2].value, '2개 (해지 예정 1개)');
+  assert.equal(r.stats[3].value, '1,083원');
+  assert.equal(r.categories[0].category, '스트리밍');
+  assert.equal(r.categories[0].share, '94%');
+  // sa renews 2026-03-14 (D-4); sb's 2026-03-01 advances to 2027-03-01, outside 30 days
+  assert.deepEqual(r.upcoming.map((u) => [u.name, u.daysLeft]), [['Netflix형 스트리밍', 'D-4']]);
+  assert.equal(r.upcoming[0].amount, '17,000원');
+});
+test('buildSpendReport: budget over and under', () => {
+  assert.equal(buildSpendReport([sa], SPEND_TODAY, 20000).stats[4].value, '20,000원 (사용 85%)');
+  assert.equal(buildSpendReport([sa], SPEND_TODAY, 10000).stats[4].value, '10,000원 (사용 170%, 초과)');
+});
+test('buildSpendReport: a renewal today is labelled 오늘', () => {
+  const t = { ...sa, nextDate: SPEND_TODAY };
+  assert.equal(buildSpendReport([t], SPEND_TODAY).upcoming[0].daysLeft, '오늘');
+});
+test('compareSubscriptions: null for missing or identical subscriptions', () => {
+  assert.equal(compareSubscriptions(sa, null, SPEND_TODAY), null);
+  assert.equal(compareSubscriptions(sa, { ...sa }, SPEND_TODAY), null);
+});
+test('compareSubscriptions: numbers, shares and diffs', () => {
+  const c = compareSubscriptions(sa, sb, SPEND_TODAY);
+  const row = (k) => c.rows.find((r) => r.key === k);
+  assert.equal(row('charge').left, 17000);
+  assert.equal(row('charge').right, 13000);
+  assert.equal(row('charge').diff, -4000);
+  assert.equal(row('myMonthly').left, 8500);
+  assert.ok(Math.abs(row('myMonthly').right - 1083.33) < 0.01);
+  assert.equal(row('changes').right, 1);
+  assert.equal(row('daysLeft').left, 4);
+  assert.equal(row('daysLeft').right, 356);
+});
+test('compareSubscriptions: text rows have no diff', () => {
+  const c = compareSubscriptions(sa, sb, SPEND_TODAY);
+  assert.equal(c.rows.find((r) => r.key === 'cycle').diff, null);
+  assert.equal(c.rows.find((r) => r.key === 'status').left, '사용 중');
+  assert.equal(c.rows.find((r) => r.key === 'nextDate').right, '2027-03-01');
+});

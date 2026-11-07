@@ -34,13 +34,26 @@
 </div>
 
 <header class="hero" id="top">
-  <div class="mesh" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
   <div class="wrap hero-inner">
-    <h1>잊고 낸 구독료,<br>이제 <em>0원</em>으로.</h1>
-    <p class="lead">정기 결제를 한 곳에 모으고, 갱신일 전에 미리 알려드려요.</p>
-    <div class="hero-actions">
-      <button id="addBtn" class="btn primary" type="button">구독 추가</button>
-      <button id="demoBtn" class="btn glass" type="button">예시 데이터 불러오기</button>
+    <div class="hero-grid">
+      <div>
+        <h1>잊고 낸 구독료,<br>이제 <em>0원</em>으로.</h1>
+        <p class="lead">정기 결제를 한 곳에 모으고, 갱신일 전에 미리 알려드려요.</p>
+        <div class="hero-actions">
+          <button id="addBtn" class="btn primary" type="button">구독 추가</button>
+          <button id="demoBtn" class="btn glass" type="button">예시 데이터 불러오기</button>
+        </div>
+      </div>
+      <figure class="ledger-mock" aria-hidden="true">
+        <div class="lm-top"><b>구독 장부</b><small>예시 화면</small></div>
+        <ul class="lm-list">
+          <li><span class="lm-name">영상 스트리밍</span><span class="lm-cycle">매월</span><span class="lm-amt">17,000원</span><span class="lm-d">D-3</span></li>
+          <li><span class="lm-name">음악 스트리밍</span><span class="lm-cycle">매월</span><span class="lm-amt">10,900원</span><span class="lm-d">D-9</span></li>
+          <li><span class="lm-name">클라우드 저장소</span><span class="lm-cycle">매년</span><span class="lm-amt">13,000원</span><span class="lm-d ok">D-41</span></li>
+          <li><span class="lm-name">개발 도구</span><span class="lm-cycle">분기</span><span class="lm-amt">39,600원</span><span class="lm-d ok">D-62</span></li>
+        </ul>
+        <div class="lm-foot"><span>월 지출 (추정)</span><strong>28,983원</strong></div>
+      </figure>
     </div>
     <div class="stats" id="stats" aria-live="polite"></div>
   </div>
@@ -153,6 +166,23 @@
 
   <section class="card savings" id="savings" aria-live="polite"></section>
 
+  <section class="grid2" aria-label="비교와 리포트">
+    <article class="card" id="compareCard" aria-labelledby="cmpH">
+      <h2 id="cmpH">구독 비교</h2>
+      <p class="hint">두 구독의 결제액, 내 부담, 갱신일을 나란히 봅니다. 차이는 B에서 A를 뺀 값이에요. 추정 값입니다.</p>
+      <div class="row2">
+        <div class="field"><label for="cmpA">구독 A</label><select id="cmpA"></select></div>
+        <div class="field"><label for="cmpB">구독 B</label><select id="cmpB"></select></div>
+      </div>
+      <div id="cmpOut" class="cmp-out" aria-live="polite"></div>
+    </article>
+    <article class="card" aria-labelledby="repH">
+      <h2 id="repH">인쇄용 리포트</h2>
+      <p class="hint">월·연 지출 추정, 카테고리 비중, 30일 안의 갱신 목록을 인쇄 화면으로 펼칩니다. 인쇄 대화상자에서 PDF로 저장할 수 있어요.</p>
+      <button id="printBtn" class="btn ghost small" type="button">인쇄용 보기</button>
+    </article>
+  </section>
+
   <section id="records" aria-labelledby="listH" class="card">
     <div class="card-head">
       <h2 id="listH" tabindex="-1">전체 구독 <span id="demoTag" class="tag demo" hidden>예시 데이터</span></h2>
@@ -249,6 +279,8 @@
     </div>
   </form>
 </dialog>
+
+<section id="printArea" class="print-area" aria-label="인쇄용 리포트"></section>
 
 <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
 <script type="module" src="app.js"></script>

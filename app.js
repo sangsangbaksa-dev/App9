@@ -7,6 +7,7 @@ import {
   trialKey, TRIAL_WARN_DAYS, NOTE_MAX,
   digestFacts, localDigest, buildDigestPrompt, buildAnthropicRequest, extractText, parseDigestResponse,
   isPlausibleKey, aiErrorMessage, AI_KEY_STORAGE,
+  buildSpendReport, compareSubscriptions,
 } from './logic.js';
 
 const KEY = 'renewal-ledger:v1', THEME_KEY = 'renewal-ledger:theme', BUDGET_KEY = 'renewal-ledger:budget';
@@ -461,6 +462,68 @@ function renderList() {
   shown.forEach((s, i) => ul.append(itemEl(s, i, dupKeys.has(normalizeName(s.name)))));
 }
 
+// ---- comparison of two subscriptions ----
+const CMP_UNIT = { won: v => won(v), days: v => `${v}일`, count: v => `${v}회`, text: v => String(v) };
+function fmtCmp(unit, v) { return v == null ? '-' : CMP_UNIT[unit](v); }
+function fmtCmpDiff(unit, d) {
+  if (d == null) return '-';
+  const sign = d > 0 ? '+' : '';
+  if (unit === 'won') return sign + won(d);
+  if (unit === 'days') return sign + d + '일';
+  return sign + d + '회';
+}
+function fillCmpSelect(sel, prevId, index) {
+  const list = [...subs].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  sel.replaceChildren(...list.map(s => el('option', { value: s.id, text: s.name })));
+  if (list.some(s => s.id === prevId)) sel.value = prevId;
+  else if (list[index]) sel.value = list[index].id;
+}
+function renderCompare() {
+  const a = $('cmpA'), b = $('cmpB'), out = $('cmpOut');
+  const prevA = a.value, prevB = b.value;
+  fillCmpSelect(a, prevA, 0);
+  fillCmpSelect(b, prevB, 1);
+  a.disabled = b.disabled = subs.length < 2;
+  if (subs.length < 2) { out.replaceChildren(el('p', { class: 'hint', text: '구독이 2개 이상이면 두 개를 골라 비교할 수 있어요.' })); return; }
+  const c = compareSubscriptions(subs.find(s => s.id === a.value), subs.find(s => s.id === b.value), todayStr());
+  if (!c) { out.replaceChildren(el('p', { class: 'hint', text: '서로 다른 구독을 고르면 차이가 보여요.' })); return; }
+  const rows = c.rows.map(r => el('tr', {},
+    el('th', { scope: 'row', text: r.label }),
+    el('td', { class: 'num', text: r.unit === 'text' ? String(r.left ?? '-') : fmtCmp(r.unit, r.left) }),
+    el('td', { class: 'num', text: r.unit === 'text' ? String(r.right ?? '-') : fmtCmp(r.unit, r.right) }),
+    el('td', { class: 'num diff', text: r.diff == null ? '-' : fmtCmpDiff(r.unit, r.diff) })));
+  out.replaceChildren(el('div', { class: 'cmp-wrap', role: 'region', tabindex: '0', 'aria-label': '구독 비교 표' },
+    el('table', { class: 'cmp' },
+      el('caption', { class: 'sr-only', text: `${c.left.name}과 ${c.right.name} 비교` }),
+      el('thead', {}, el('tr', {},
+        el('th', { scope: 'col', text: '항목' }),
+        el('th', { scope: 'col', text: `A: ${c.left.name}` }),
+        el('th', { scope: 'col', text: `B: ${c.right.name}` }),
+        el('th', { scope: 'col', text: '차이 (B−A)' }))),
+      el('tbody', {}, ...rows))));
+}
+$('cmpA').addEventListener('change', renderCompare);
+$('cmpB').addEventListener('change', renderCompare);
+
+// ---- printable report ----
+function printReport() {
+  const r = buildSpendReport(subs, todayStr(), budget, 30);
+  $('printArea').replaceChildren(
+    el('h1', { text: r.title }),
+    el('p', { text: `기준일 ${r.date}` }),
+    el('dl', { class: 'print-stats' }, ...r.stats.map(x => el('div', {}, el('dt', { text: x.label }), el('dd', { text: x.value })))),
+    r.categories.length ? el('table', { class: 'print-table' },
+      el('thead', {}, el('tr', {}, el('th', { text: '카테고리' }), el('th', { class: 'num', text: '월 환산' }), el('th', { class: 'num', text: '비중' }))),
+      el('tbody', {}, ...r.categories.map(c => el('tr', {}, el('td', { text: c.category }), el('td', { class: 'num', text: c.monthly }), el('td', { class: 'num', text: c.share }))))) : null,
+    el('h2', { text: '30일 안의 갱신' }),
+    r.upcoming.length ? el('table', { class: 'print-table' },
+      el('thead', {}, el('tr', {}, el('th', { text: '서비스' }), el('th', { text: '갱신일' }), el('th', { class: 'num', text: '남은 기간' }), el('th', { class: 'num', text: '금액' }))),
+      el('tbody', {}, ...r.upcoming.map(u => el('tr', {}, el('td', { text: u.name }), el('td', { text: u.date }), el('td', { class: 'num', text: u.daysLeft }), el('td', { class: 'num', text: u.amount }))))) : el('p', { text: '30일 안에 갱신되는 구독이 없어요.' }),
+    el('p', { class: 'print-note', text: r.note }));
+  window.print();
+}
+$('printBtn').addEventListener('click', printReport);
+
 function render() {
   advanceAll();
   renderBar();
@@ -475,6 +538,7 @@ function render() {
   renderTimeline();
   renderSavings();
   renderSim();
+  renderCompare();
   renderList();
 }
 
